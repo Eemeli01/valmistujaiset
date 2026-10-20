@@ -1,5 +1,5 @@
 // Aseta tähän GitHubin Personal Access Token (PAT), jotta tiedosto voidaan tallentaa suoraan repoosi
-const GITHUB_TOKEN = "VAIHDA_TÄHÄN_OMA_GITHUB_TOKENISI";
+const GITHUB_TOKEN = "V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";
 const GITHUB_OWNER = "Eemeli01";
 const GITHUB_REPO = "valmistujaiset";
 const GITHUB_PATH = "responses.json";
