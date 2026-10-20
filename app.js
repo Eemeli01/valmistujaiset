@@ -55,7 +55,7 @@ async function initAudioAndVisuals() {
     const source = audioCtx.createMediaElementSource(audio);
     analyser = audioCtx.createAnalyser();
     
-    analyser.fftSize = 512;
+    analyser.fftSize = 256;
     analyser.smoothingTimeConstant = 0.70; // Nopeampi vaste
 
     source.connect(analyser);
