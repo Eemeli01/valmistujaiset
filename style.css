@@ -68,7 +68,7 @@ body {
   margin-bottom: 28px;
 }
 
-/* --- HUIPPUNOPEA CANVAS-VALOJÄRJESTELMÄ --- */
+/* --- CANVAS-VALOJÄRJESTELMÄ (PEHMEÄ SUMENNUS PALAUTETTU) --- */
 #disco-lights {
   position: fixed;
   inset: 0;
@@ -81,64 +81,68 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  /* Tekee Canvas-keiloista pehmeitä ja aitoja klubivaloja ilman suunnikasreunoja */
+  filter: blur(22px);
+  transform: scale(1.08); /* Estää blur-reunojen tummumisen */
 }
 
-/* --- HORISONTAALISET LAVAVALOT (REPAINT-VAPAA GPU-VERSIO) --- */
+/* --- HORISONTAALISET LAVAVALOT (ALKUPERÄINEN NÄYTTÄVÄ ILME) --- */
 .stage-blinders {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 16px;
+  gap: 18px;
   z-index: 6;
   pointer-events: none;
 }
 
-.blinder-top { top: 14px; }
-.blinder-bottom { bottom: 14px; }
+.blinder-top { top: 18px; }
+.blinder-bottom { bottom: 18px; }
 
 .blinder-light {
-  position: relative;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #0d0d14;
   border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+  transition: background 0.04s ease, border-color 0.04s ease, box-shadow 0.04s ease, transform 0.04s ease;
 }
 
-/* Valmis hehkutaso jokaisen lampun sisällä: vain opacity muuttuu (0% CPU-kuorma!) */
-.blinder-light::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 35%, #ffd700 70%, transparent 100%);
-  opacity: 0;
-  will-change: opacity, transform;
-  transition: opacity 0.03s linear;
+.blinder-light.active {
+  background: radial-gradient(circle, #ffffff 30%, #ffd700 100%);
+  border-color: #ffffff;
+  box-shadow: 
+    0 0 16px #ffd700,
+    0 0 35px #ff9900;
+  transform: scale(1.15);
 }
 
-.blinder-light.active::after,
-.blinder-light.solid-on::after {
-  opacity: 1;
-  transform: scale(1.25);
+.blinder-light.solid-on {
+  background: #ffffff !important;
+  border-color: #ffd700 !important;
+  box-shadow: 
+    0 0 24px #ffffff,
+    0 0 50px #ffd700 !important;
+  transform: scale(1.2) !important;
 }
 
 @media (max-width: 480px) {
-  .stage-blinders { gap: 10px; }
-  .blinder-light { width: 20px; height: 20px; }
-  .blinder-top { top: 10px; }
-  .blinder-bottom { bottom: 10px; }
+  .stage-blinders { gap: 12px; }
+  .blinder-light { width: 24px; height: 24px; }
+  .blinder-top { top: 14px; }
+  .blinder-bottom { bottom: 14px; }
 }
 
-/* --- PYYSTYSUUNTAISET NEONKYLTIT (NÄKYVÄT AINA) --- */
+/* --- PYYSTYSUUNTAISET NEONKYLTIT (ALKUPERÄINEN FONTTI & HEHKU) --- */
 .side-sign {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Montserrat", sans-serif;
   font-weight: 900;
-  font-size: clamp(0.72rem, 2.5vh, 1.25rem);
+  font-size: clamp(0.85rem, 2.7vh, 1.45rem);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   writing-mode: vertical-rl;
@@ -148,9 +152,13 @@ body {
   pointer-events: none;
   display: block !important;
   visibility: visible !important;
-  color: #161622;
+  
+  /* Alkuperäinen tumma ääriviivatyyli sammuksissa */
+  color: #0c0c12;
+  -webkit-text-stroke: 1.2px #1c1c28;
+  text-shadow: none;
   opacity: 0.45;
-  will-change: opacity, color;
+  transition: opacity 0.08s ease, color 0.08s ease, -webkit-text-stroke 0.08s ease, text-shadow 0.08s ease;
 }
 
 .left-sign {
@@ -162,10 +170,16 @@ body {
   right: 6px;
 }
 
+/* Alkuperäinen kirkas kultainen neonhehku sytytettynä */
 .side-sign.illuminated {
-  color: #ffe66d;
+  color: #fffde8;
+  -webkit-text-stroke: 1.8px #ffd700;
   opacity: 1;
-  text-shadow: 0 0 12px #ffd700;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.95),
+    0 0 25px #ffd700,
+    0 0 50px #ffae00,
+    0 0 85px rgba(255, 174, 0, 0.85);
 }
 
 /* Kelluva mykistyspainike */
@@ -188,46 +202,48 @@ body {
   display: none !important;
 }
 
-/* --- KORTIN KOKO JA ASEMOINTI --- */
+/* --- KORTIN KOKO: KAPEAMPI SIVUILTA, VÄLJEMPI KORKEUSSUUNNASSA --- */
 .invite-container {
-  width: calc(100% - 64px);
-  max-width: 375px;
-  padding: 50px 0;
+  /* Jätetään 44px tilaa kummallekin reunalle, jotta ALL OF THE LIGHTS mahtuu reilusti */
+  width: calc(100% - 88px);
+  max-width: 335px; /* Selvästi kapeampi profiili */
+  padding: 54px 0;
   z-index: 10;
   display: flex;
   justify-content: center;
 }
 
-/* --- KORTTI & LAITTEISTOKIIHDYTETYT VALOMADOT --- */
 .invite-card {
   position: relative;
   width: 100%;
   background: var(--card-bg);
-  border-radius: 20px;
-  padding: 18px 18px;
+  border-radius: 22px;
+  /* Väljempi pystysuunnassa (24px), tiiviimpi leveyssuunnassa (18px) */
+  padding: 24px 18px;
   will-change: transform;
   transform: translateZ(0);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
+  text-align: left;
 }
 
 .worm-border {
   position: absolute;
-  inset: -7px;
-  border-radius: 26px;
+  inset: -6px;
+  border-radius: 28px;
   overflow: hidden;
   z-index: -1;
   pointer-events: none;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.35);
 }
 
 .worm-border::after {
   content: "";
   position: absolute;
-  inset: 7px;
+  inset: 6px;
   background: var(--card-bg);
-  border-radius: 19px;
+  border-radius: 22px;
 }
 
-/* Kiinteät värit: ei tarvitse koskaan piirtää tekstuuria uudelleen! */
 .worm-spinner {
   position: absolute;
   top: -50%;
@@ -251,35 +267,37 @@ body {
   backface-visibility: hidden;
 }
 
-/* Kortin sisällöt */
+/* Kortin sisällöt väljemmällä pystytilalla */
 .card-header {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .badge {
   display: inline-block;
-  padding: 2px 10px;
+  padding: 3px 12px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   color: #00f0ff;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 1px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .party-title {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: 1px;
-  color: #ffffff;
-  margin-bottom: 2px;
+  background: linear-gradient(135deg, #fff 40%, #00f0ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
 }
 
 .host-name {
   color: #a0a0b2;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 500;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -287,63 +305,96 @@ body {
 
 .event-details {
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  padding: 8px 12px;
-  margin-bottom: 10px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px; /* Väljempi riviväli */
+  text-align: left;
 }
 
 .detail-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  text-align: left;
 }
 
-.detail-row .icon { font-size: 1.05rem; }
-.detail-row strong { display: block; font-size: 0.8rem; line-height: 1.2; }
-.detail-row p { color: #888899; font-size: 0.72rem; line-height: 1.2; }
+.detail-row .icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
 
-.form-group { margin-bottom: 8px; }
-.form-group label { display: block; font-size: 0.75rem; margin-bottom: 2px; color: #aaa; }
+.detail-row strong {
+  display: block;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.detail-row p {
+  color: #888899;
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.form-group {
+  margin-bottom: 12px; /* Väljempi väli lomakekentille */
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.76rem;
+  margin-bottom: 4px;
+  color: #aaa;
+  text-align: left;
+}
 
 input[type="text"],
 textarea {
   width: 100%;
-  padding: 7px 10px;
+  padding: 9px 12px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   outline: none;
 }
 
-textarea { height: 48px; resize: none; }
+textarea {
+  height: 54px;
+  resize: none;
+}
 
 input[type="text"]:focus,
 textarea:focus {
   border-color: #00f0ff;
 }
 
-.radio-options { display: flex; gap: 6px; }
+.radio-options {
+  display: flex;
+  gap: 8px;
+}
 
 .radio-btn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 4px;
+  padding: 8px 6px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   text-align: center;
 }
 
-.radio-btn input { display: none; }
+.radio-btn input {
+  display: none;
+}
 
 .radio-btn:has(input:checked) {
   background: rgba(0, 240, 255, 0.15);
@@ -356,16 +407,21 @@ textarea:focus {
   color: #050508;
   border: none;
   border-radius: 50px;
-  padding: 10px 18px;
-  font-size: 0.85rem;
+  padding: 12px 20px;
+  font-size: 0.86rem;
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
 }
 
-.full-width { width: 100%; margin-top: 4px; }
+.full-width {
+  width: 100%;
+  margin-top: 6px;
+}
 
-.pulse { animation: neon-pulse 1.8s infinite ease-in-out; }
+.pulse {
+  animation: neon-pulse 1.8s infinite ease-in-out;
+}
 
 @keyframes neon-pulse {
   0%, 100% { transform: scale(1); }
@@ -374,7 +430,7 @@ textarea:focus {
 
 .rsvp-success {
   text-align: center;
-  padding: 16px 0;
+  padding: 18px 0;
 }
 
 .rsvp-success .check-icon { font-size: 2rem; margin-bottom: 6px; }

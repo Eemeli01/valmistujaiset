@@ -173,46 +173,44 @@ function renderLoop() {
 
   const maxLen = Math.hypot(cw, ch) * 1.15;
 
-  if (!isQuietMoment) {
-    // Värien vaihto ilman DOM-tyylien uudelleenlaskentaa!
-    const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
-    if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
+if (!isQuietMoment) {
+    // Rauhallisempi värien vaihto (vähintään 420ms väli, vain selkeissä iskuissa)
+    if ((subBass > 0.76 || mids > 0.74) && now - lastBeat > 420) {
       colorIdx = (colorIdx + 1) % PALETTE.length;
       lastBeat = now;
     }
 
-    if (beatEnergy > 0.70) {
-      beamIntensity = 0.85 + Math.random() * 0.15;
-    } else {
-      beamIntensity = Math.max(0.40, beamIntensity * 0.92);
-    }
+    // Pehmeä kirkkauden seuranta ilman satunnaista sähinää
+    const targetIntensity = Math.min(0.85, 0.38 + subBass * 0.45 + mids * 0.2);
+    beamIntensity += (targetIntensity - beamIntensity) * 0.15;
 
+    // Hallittu, rauhallisempi strobo vain selkeässä build-upin loppuhuipennuksessa ja kovimmassa dropissa
     let strobeGate = 1.0;
-    if (currentTime >= 73.5 && currentTime <= 81.4) {
-      const p = (currentTime - 73.5) / (81.4 - 73.5);
-      const cycleMs = 85 - p * 52;
-      strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.0;
-    } else if (subBass > 0.84 && mids > 0.70) {
-      strobeGate = (Math.floor(now / 38) % 2 === 0) ? 1.0 : 0.15;
+    if (currentTime >= 75.5 && currentTime <= 81.4) {
+      const p = (currentTime - 75.5) / (81.4 - 75.5);
+      const cycleMs = 95 - p * 45; // Hillitympi taajuus
+      strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.25;
+    } else if (subBass > 0.88 && mids > 0.78) {
+      // Ei täyttä mustaa leikkausta, vaan miellyttävä sykähdys
+      strobeGate = (Math.floor(now / 45) % 2 === 0) ? 1.0 : 0.45;
     }
 
-    const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
-    const alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
+    const alpha = Math.min(0.9, beamIntensity * strobeGate);
 
     const colP = PALETTE[colorIdx].p;
     const colS = PALETTE[colorIdx].s;
     const t = timeScale;
 
-    // 8 kpl värillisiä klubispotteja laajoilla Lissajous-radoilla
-    drawBeam(0, 0,       45 + Math.sin(t * 0.72) * 55 + Math.cos(t * 0.32) * 35, 36, colP, alpha, maxLen);
-    drawBeam(cw, 0,     135 + Math.cos(t * 0.65) * 55 - Math.sin(t * 0.28) * 35, 36, colS, alpha, maxLen);
-    drawBeam(0, ch,     -45 - Math.sin(t * 0.68) * 55 + Math.cos(t * 0.42) * 35, 38, colS, alpha, maxLen);
-    drawBeam(cw, ch,   -135 - Math.cos(t * 0.78) * 55 + Math.sin(t * 0.36) * 35, 38, colP, alpha, maxLen);
+    // 8 kpl pehmeitä klubispotteja
+    drawBeam(0, 0,       45 + Math.sin(t * 0.72) * 55 + Math.cos(t * 0.32) * 35, 42, colP, alpha, maxLen);
+    drawBeam(cw, 0,     135 + Math.cos(t * 0.65) * 55 - Math.sin(t * 0.28) * 35, 42, colS, alpha, maxLen);
+    drawBeam(0, ch,     -45 - Math.sin(t * 0.68) * 55 + Math.cos(t * 0.42) * 35, 44, colS, alpha, maxLen);
+    drawBeam(cw, ch,   -135 - Math.cos(t * 0.78) * 55 + Math.sin(t * 0.36) * 35, 44, colP, alpha, maxLen);
 
-    drawBeam(cw * 0.5, 0,  90 + Math.sin(t * 0.92 + 1.2) * 65, 30, colS, alpha * 0.85, maxLen);
-    drawBeam(cw * 0.5, ch, -90 - Math.cos(t * 0.85 + 0.8) * 65, 30, colP, alpha * 0.85, maxLen);
-    drawBeam(0, ch * 0.5,   0 + Math.cos(t * 0.68 + 2.1) * 60, 32, colP, alpha * 0.8, maxLen);
-    drawBeam(cw, ch * 0.5, 180 - Math.sin(t * 0.88 + 1.7) * 60, 32, colS, alpha * 0.8, maxLen);
+    drawBeam(cw * 0.5, 0,  90 + Math.sin(t * 0.92 + 1.2) * 65, 36, colS, alpha * 0.8, maxLen);
+    drawBeam(cw * 0.5, ch, -90 - Math.cos(t * 0.85 + 0.8) * 65, 36, colP, alpha * 0.8, maxLen);
+    drawBeam(0, ch * 0.5,   0 + Math.cos(t * 0.68 + 2.1) * 60, 38, colP, alpha * 0.75, maxLen);
+    drawBeam(cw, ch * 0.5, 180 - Math.sin(t * 0.88 + 1.7) * 60, 38, colS, alpha * 0.75, maxLen);
   } else {
     // 5 kpl valkoisia hakuspotteja rauhallisissa kohdissa
     const wT = now * 0.0006;
