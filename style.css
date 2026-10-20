@@ -1,0 +1,649 @@
+:root {
+  --bg-color: #050508;
+  --card-bg: rgba(16, 16, 24, 0.76);
+  --active-color: #00f0ff;
+  --secondary-color: #ff007f;
+  --bass-intensity: 0;
+  --bass-scale: 1;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: #f0f0f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Sisääntulokerros */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  transition: opacity 0.8s ease, visibility 0.8s;
+  padding: 20px;
+  text-align: center;
+}
+
+#overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.vip-badge {
+  color: #00ff66;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.overlay-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.overlay-sub {
+  color: #8c8c9e;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin-bottom: 28px;
+}
+
+/* --- KLUBIN VALOT & SPOTIT --- */
+#disco-lights {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* 8 KPL VÄRIKKÄÄT KLUBISPOTIT */
+.spotlight {
+  position: absolute;
+  width: 160vmax;
+  height: 160vmax;
+  border-radius: 50%;
+  opacity: calc(
+    (var(--spot-beam-intensity, 0.45) + var(--sparkle-factor, 0)) 
+    * var(--color-lights-opacity, 1) 
+    * var(--strobe-gate, 1)
+  );
+  filter: blur(28px);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  transition: opacity 0.02s linear;
+}
+
+.spot-tl {
+  top: -80vmax;
+  left: -80vmax;
+  background: conic-gradient(from 30deg at 50% 50%, transparent 0deg, var(--active-color) 22deg, transparent 45deg);
+  transform: rotate(var(--spot-rot-tl, 0deg));
+}
+
+.spot-tr {
+  top: -80vmax;
+  right: -80vmax;
+  background: conic-gradient(from 90deg at 50% 50%, transparent 0deg, var(--secondary-color) 22deg, transparent 45deg);
+  transform: rotate(var(--spot-rot-tr, 0deg));
+}
+
+.spot-bl {
+  bottom: -80vmax;
+  left: -80vmax;
+  background: conic-gradient(from 180deg at 50% 50%, transparent 0deg, var(--secondary-color) 24deg, transparent 48deg);
+  transform: rotate(var(--spot-rot-bl, 0deg));
+}
+
+.spot-br {
+  bottom: -80vmax;
+  right: -80vmax;
+  background: conic-gradient(from 270deg at 50% 50%, transparent 0deg, var(--active-color) 24deg, transparent 48deg);
+  transform: rotate(var(--spot-rot-br, 0deg));
+}
+
+.spot-tc {
+  top: -80vmax;
+  left: calc(50% - 80vmax);
+  background: conic-gradient(from 75deg at 50% 50%, transparent 0deg, var(--secondary-color) 18deg, transparent 36deg);
+  transform: rotate(var(--spot-rot-tc, 0deg));
+  filter: blur(22px);
+}
+
+.spot-bc {
+  bottom: -80vmax;
+  left: calc(50% - 80vmax);
+  background: conic-gradient(from 255deg at 50% 50%, transparent 0deg, var(--active-color) 20deg, transparent 40deg);
+  transform: rotate(var(--spot-rot-bc, 0deg));
+  filter: blur(22px);
+}
+
+.spot-ml {
+  top: calc(50% - 80vmax);
+  left: -80vmax;
+  background: conic-gradient(from 350deg at 50% 50%, transparent 0deg, var(--active-color) 20deg, transparent 42deg);
+  transform: rotate(var(--spot-rot-ml, 0deg));
+  filter: blur(24px);
+}
+
+.spot-mr {
+  top: calc(50% - 80vmax);
+  right: -80vmax;
+  background: conic-gradient(from 170deg at 50% 50%, transparent 0deg, var(--secondary-color) 20deg, transparent 42deg);
+  transform: rotate(var(--spot-rot-mr, 0deg));
+  filter: blur(24px);
+}
+
+.ambient-glow {
+  position: absolute;
+  width: 100vw;
+  height: 50vh;
+  filter: blur(90px);
+  opacity: calc((0.25 + var(--bass-intensity) * 0.5) * var(--color-lights-opacity, 1));
+  transition: opacity 0.3s ease;
+}
+
+.top-glow {
+  top: -20vh;
+  background: radial-gradient(ellipse at center, var(--active-color), transparent 75%);
+}
+
+.bottom-glow {
+  bottom: -20vh;
+  background: radial-gradient(ellipse at center, var(--secondary-color), transparent 75%);
+}
+
+/* 5 KPL VALKOISET HAKUSPOTIT */
+.searchlight-beam {
+  position: absolute;
+  width: 150vmax;
+  height: 150vmax;
+  border-radius: 50%;
+  opacity: 0;
+  filter: blur(4px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  will-change: transform;
+}
+
+.beam-1 {
+  top: -75vmax;
+  left: -75vmax;
+  background: conic-gradient(from 20deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.95) 8deg, rgba(255, 255, 255, 0.3) 16deg, transparent 24deg);
+  transform: rotate(var(--white-rot-1, 0deg));
+}
+
+.beam-2 {
+  bottom: -75vmax;
+  right: -75vmax;
+  background: conic-gradient(from 200deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.9) 7deg, rgba(255, 255, 255, 0.25) 15deg, transparent 22deg);
+  transform: rotate(var(--white-rot-2, 0deg));
+}
+
+.beam-3 {
+  top: -75vmax;
+  right: -30vmax;
+  background: conic-gradient(from 110deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.85) 9deg, rgba(255, 255, 255, 0.25) 18deg, transparent 26deg);
+  transform: rotate(var(--white-rot-3, 0deg));
+}
+
+.beam-4 {
+  bottom: -75vmax;
+  left: -30vmax;
+  background: conic-gradient(from 290deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.9) 8deg, rgba(255, 255, 255, 0.28) 16deg, transparent 24deg);
+  transform: rotate(var(--white-rot-4, 0deg));
+}
+
+.beam-5 {
+  top: -75vmax;
+  left: -20vmax;
+  background: conic-gradient(from 70deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.8) 10deg, rgba(255, 255, 255, 0.2) 20deg, transparent 30deg);
+  transform: rotate(var(--white-rot-5, 0deg));
+}
+
+body.quiet-mode .searchlight-beam {
+  opacity: 0.85;
+}
+
+body.quiet-mode #disco-lights::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+body.quiet-mode .spotlight,
+body.quiet-mode .ambient-glow,
+body.quiet-mode #strobe-flash {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+/* --- HORISONTAALISET LAVAVALOT --- */
+.stage-blinders {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.blinder-top {
+  top: 14px;
+}
+
+.blinder-bottom {
+  bottom: 14px;
+}
+
+.blinder-light {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #0d0d14;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+  transition: background 0.04s ease, border-color 0.04s ease, box-shadow 0.04s ease, transform 0.04s ease;
+}
+
+.blinder-light.active {
+  background: radial-gradient(circle, #ffffff 30%, #ffd700 100%);
+  border-color: #ffffff;
+  box-shadow: 0 0 14px #ffd700, 0 0 28px #ff9900;
+  transform: scale(1.15);
+}
+
+.blinder-light.solid-on {
+  background: #ffffff !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 22px #ffffff, 0 0 45px #ffd700 !important;
+  transform: scale(1.2) !important;
+}
+
+@media (max-width: 480px) {
+  .stage-blinders {
+    gap: 10px;
+  }
+  .blinder-light {
+    width: 20px;
+    height: 20px;
+  }
+  .blinder-top {
+    top: 10px;
+  }
+  .blinder-bottom {
+    bottom: 10px;
+  }
+}
+
+/* --- PYYSTYSUUNTAISET NEONKYLTIT (NÄKYVÄT AINA, MYÖS MOBIILISSA) --- */
+.side-sign {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Montserrat", sans-serif;
+  font-weight: 900;
+  /* Skaalautuu näytön mukaan mahtuen aina pystysuunnassa */
+  font-size: clamp(0.72rem, 2.5vh, 1.25rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  white-space: nowrap;
+  z-index: 25;
+  pointer-events: none;
+  display: block !important;
+  visibility: visible !important;
+  
+  color: #0c0c12;
+  -webkit-text-stroke: 1.2px #1c1c28;
+  text-shadow: none;
+  opacity: 0.45;
+  transition: opacity 0.08s ease, color 0.08s ease, -webkit-text-stroke 0.08s ease, text-shadow 0.08s ease;
+}
+
+.left-sign {
+  left: 6px;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.right-sign {
+  right: 6px;
+}
+
+.side-sign.illuminated {
+  color: #fffde8;
+  -webkit-text-stroke: 1.6px #ffd700;
+  opacity: 1;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.95),
+    0 0 20px #ffd700,
+    0 0 40px #ffae00,
+    0 0 70px rgba(255, 174, 0, 0.85);
+}
+
+/* Kelluva mykistyspainike */
+.icon-btn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  z-index: 50;
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- KORTIN KOKO JA ASEMOINTI (KAPEAMPI JA MATALAMPI) --- */
+.invite-container {
+  /* Jätetään tilaa pystykylteille (32px kummallekin puolelle) */
+  width: calc(100% - 64px);
+  max-width: 375px; /* Selvästi kapeampi kortti */
+  padding: 50px 0; /* Varmistaa että lavavaloille jää ylös ja alas vapaa tila */
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+
+/* --- KORTTI (OVERFLOW: VISIBLE, JOTTA VALOMATOT EIVÄT LEIKKAUDU) --- */
+.invite-card {
+  position: relative;
+  width: 100%;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 18px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transform: scale(var(--bass-scale));
+  transform-origin: center center;
+  will-change: transform, box-shadow;
+  transition: transform 0.03s cubic-bezier(0.1, 0.9, 0.2, 1), border-color 0.1s ease;
+  border-color: rgba(255, 255, 255, calc(0.1 + var(--bass-intensity) * 0.8));
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7),
+              0 0 calc(35px * var(--bass-intensity)) var(--active-color),
+              0 0 calc(70px * var(--bass-intensity)) var(--secondary-color);
+  
+  /* TÄRKEÄ: Sallii valomatojen loistaa kortin reunojen ulkopuolella ilman leikkausta */
+  overflow: visible;
+}
+
+/* --- PAKSUT, HEHKUVAT VALOMATOT VASTAKKAISILLA PUOLILLA --- */
+.invite-card::before {
+  content: "";
+  position: absolute;
+  /* 8 px paksu näyttävä valojuova kortin ulkoreunalla */
+  inset: -8px;
+  border-radius: 28px;
+  padding: 8px;
+  box-sizing: border-box;
+
+  /* Kaksi matoa täsmälleen 180° toisistaan vastakkain */
+  background: conic-gradient(
+    from var(--worm-rot, 0deg) at 50% 50%,
+    transparent 0deg,
+    var(--active-color) 8deg,
+    #ffffff 22deg,
+    var(--active-color) 36deg,
+    transparent 50deg,
+    transparent 180deg,
+    var(--secondary-color) 188deg,
+    #ffffff 202deg,
+    var(--secondary-color) 216deg,
+    transparent 230deg
+  );
+
+  /* Leikataan sisus maskilla pois, jotta vain 8px ulkoreunus hehkuu */
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+
+  pointer-events: none;
+  z-index: 2;
+
+  /* Vahva kolmikerroksinen neonhohde */
+  filter: 
+    drop-shadow(0 0 6px #ffffff) 
+    drop-shadow(0 0 14px var(--active-color))
+    drop-shadow(0 0 28px var(--secondary-color));
+}
+
+/* Kortin tiivistetyt sisällöt */
+.card-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--active-color);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.party-title {
+  font-size: 1.35rem; /* Pienennetty siistiksi */
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #fff 40%, var(--active-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2px;
+}
+
+.host-name {
+  color: #a0a0b2;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.event-details {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* Pienempi väli */
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-row .icon {
+  font-size: 1.05rem;
+}
+
+.detail-row strong {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.detail-row p {
+  color: #888899;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+/* Tiivistetty RSVP-lomake */
+.form-group {
+  margin-bottom: 8px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+  color: #aaa;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+textarea {
+  height: 48px;
+  resize: none;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  border-color: var(--active-color);
+}
+
+.radio-options {
+  display: flex;
+  gap: 6px;
+}
+
+.radio-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.74rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.radio-btn input {
+  display: none;
+}
+
+.radio-btn:has(input:checked) {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: var(--active-color);
+  color: #fff;
+}
+
+.neon-btn {
+  background: linear-gradient(135deg, var(--active-color), var(--secondary-color));
+  color: #050508;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.neon-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--active-color);
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.pulse {
+  animation: neon-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 30px rgba(255, 0, 127, 0.8);
+  }
+}
+
+.rsvp-success {
+  text-align: center;
+  padding: 16px 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.rsvp-success .check-icon {
+  font-size: 2rem;
+  margin-bottom: 6px;
+}
+
+.rsvp-success h3 {
+  font-size: 1.15rem;
+  color: #00ff66;
+  margin-bottom: 4px;
+}
+
+.rsvp-success p {
+  color: #aaa;
+  font-size: 0.82rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

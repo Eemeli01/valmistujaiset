@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kutsu: DI-Valmistujaiset | Eemeli Kokkonen</title>
+
+  <!-- OpenGraph / Sosiaalisen median esikatselu -->
+  <meta property="og:title" content="Kutsu: DI-Valmistujaiset | 9.1.2027">
+  <meta property="og:description" content="Otaniemi, Espoo • Avaa kutsu napauttamalla (äänet päälle 🔊)">
+  <meta property="og:image" content="assets/og-preview.jpg">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#050508">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ääniraita taustalla -->
+  <audio id="club-audio" src="assets/club-track.mp3" preload="auto" loop></audio>
+
+  <!-- Sisääntuloikkuna (Bouncer Pattern) -->
+  <div id="overlay">
+    <div class="overlay-content">
+      <p id="vip-greeting" class="vip-badge"></p>
+      <h1 class="overlay-title">VALMISTUJAISET</h1>
+      <p class="overlay-sub">9. TAMMIKUUTA 2027 • OTANIEMI</p>
+      <button id="enter-btn" class="neon-btn pulse">ASTU SISÄÄN 🔊</button>
+    </div>
+  </div>
+
+<!-- Klubin valojärjestelmä -->
+  <div id="disco-lights" aria-hidden="true">
+    <div id="strobe-flash"></div>
+
+    <!-- 5 kpl tarkkarajaisia valkoisia hakuspotteja (rauhalliset kohdat) -->
+    <div class="searchlight-beam beam-1"></div>
+    <div class="searchlight-beam beam-2"></div>
+    <div class="searchlight-beam beam-3"></div>
+    <div class="searchlight-beam beam-4"></div>
+    <div class="searchlight-beam beam-5"></div>
+
+    <!-- 8 kpl toisistaan riippumattomasti pyyhkivää värillistä klubispottia -->
+    <div class="spotlight spot-tl"></div>
+    <div class="spotlight spot-tr"></div>
+    <div class="spotlight spot-bl"></div>
+    <div class="spotlight spot-br"></div>
+    <div class="spotlight spot-tc"></div>
+    <div class="spotlight spot-bc"></div>
+    <div class="spotlight spot-ml"></div>
+    <div class="spotlight spot-mr"></div>
+    
+    <!-- Ympäröivät ambient-pehmennykset -->
+    <div class="ambient-glow top-glow"></div>
+    <div class="ambient-glow bottom-glow"></div>
+  </div>
+
+  <!-- Ylä- ja alareunan horisontaaliset lavavalot (6 kpl kummassakin) -->
+  <div class="stage-blinders blinder-top" aria-hidden="true">
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+  </div>
+
+  <div class="stage-blinders blinder-bottom" aria-hidden="true">
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+  </div>
+
+  <!-- Pystysuuntaiset neonkyltit reunoilla -->
+  <div class="side-sign left-sign" aria-hidden="true">ALL OF THE LIGHTS</div>
+  <div class="side-sign right-sign" aria-hidden="true">ALL OF THE LIGHTS</div>
+
+  <!-- Kelluva äänenvoimakkuuden mykistyspainike -->
+  <button id="mute-btn" class="icon-btn hidden" aria-label="Mykistä äänet">🔊</button>
+
+<!-- Keskuskortti -->
+  <main class="invite-container">
+    <article class="invite-card">
+      <header class="card-header">
+        <span class="badge">TERVETULOA</span>
+        <h1 class="party-title">VALMISTUJAISBILEISIIN</h1>
+        <p class="host-name">DI Eemeli Kokkonen</p>
+      </header>
+
+      <section class="event-details">
+        <div class="detail-row">
+          <span class="icon">📅</span>
+          <div>
+            <strong>Lauantai 9.1.2027</strong>
+            <p>Ovet klo 19:00 alkaen</p>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="icon">📍</span>
+          <div>
+            <strong>Otaniemi, Espoo</strong>
+            <p>Otakaari 15</p>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="icon">👔</span>
+          <div>
+            <strong>Pukukoodi</strong>
+            <p>Smart casual</p>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="icon">⏰</span>
+          <div>
+            <strong>Ilmoittautuminen</strong>
+            <p>Pyydetään 31.12.2026 mennessä</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ilmoittautumislomake -->
+      <section class="rsvp-section" id="rsvp-container">
+        <form id="rsvp-form">
+          <div class="form-group">
+            <label for="guest-name">Nimesi</label>
+            <input type="text" id="guest-name" name="name" required placeholder="Etunimi Sukunimi">
+          </div>
+
+          <div class="form-group">
+            <label for="guest-avec">Avec</label>
+            <input type="text" id="guest-avec" name="avec" placeholder="Valinnainen">
+          </div>
+
+          <div class="form-group">
+            <label>Pääsetkö paikalle?</label>
+            <div class="radio-options">
+              <label class="radio-btn">
+                <input type="radio" name="attendance" value="attending" checked>
+                <span>Mukana! 🎉</span>
+              </label>
+              <label class="radio-btn">
+                <input type="radio" name="attendance" value="declined">
+                <span>En valitettavasti pääse</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="guest-message">Erityisruokavaliot tai biisitoiveet</label>
+            <textarea id="guest-message" name="message" rows="3" placeholder="Ruokavalio, toiveet tai tervehdys..."></textarea>
+          </div>
+
+          <button type="submit" id="submit-btn" class="neon-btn full-width">LÄHETÄ VASTAUS</button>
+        </form>
+
+        <!-- Vahvistusviesti -->
+        <div id="rsvp-success" class="rsvp-success hidden">
+          <div class="check-icon">✨</div>
+          <h3>Olet listalla!</h3>
+          <p>Vastauksesi on tallennettu. Nähdään Otaniemessä 9. tammikuuta!</p>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
