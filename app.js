@@ -12,10 +12,7 @@ const PALETTE = [
 let colorIdx = 0;
 let lastBeat = 0;
 let beamIntensity = 0.5;
-
-let wormAngle = 0; // Valomatojen kulma-asema
-
-// Ajan integraattori liikeradoille
+let wormAngle = 0;
 let timeScale = 0;
 
 let audioCtx = null;
@@ -31,11 +28,30 @@ const nameInput = document.getElementById("guest-name");
 const rsvpForm = document.getElementById("rsvp-form");
 const rsvpSuccess = document.getElementById("rsvp-success");
 
+// Haetaan animoitavat DOM-elementit kerran muistiin (ei hakuja silmukassa)
+const inviteCard = document.getElementById("invite-card");
+const wormSpinner = document.getElementById("worm-spinner");
 const sideSigns = document.querySelectorAll(".side-sign");
 const topLights = document.querySelectorAll(".blinder-top .blinder-light");
 const bottomLights = document.querySelectorAll(".blinder-bottom .blinder-light");
 
-// 1. VIP-nimen alustus URL-parametrista
+const spotTL = document.querySelector(".spot-tl");
+const spotTR = document.querySelector(".spot-tr");
+const spotBL = document.querySelector(".spot-bl");
+const spotBR = document.querySelector(".spot-br");
+const spotTC = document.querySelector(".spot-tc");
+const spotBC = document.querySelector(".spot-bc");
+const spotML = document.querySelector(".spot-ml");
+const spotMR = document.querySelector(".spot-mr");
+const allColorSpots = [spotTL, spotTR, spotBL, spotBR, spotTC, spotBC, spotML, spotMR];
+
+const beam1 = document.querySelector(".beam-1");
+const beam2 = document.querySelector(".beam-2");
+const beam3 = document.querySelector(".beam-3");
+const beam4 = document.querySelector(".beam-4");
+const beam5 = document.querySelector(".beam-5");
+
+// 1. VIP-nimen alustus
 window.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const guest = urlParams.get("guest");
@@ -50,13 +66,14 @@ window.addEventListener("DOMContentLoaded", () => {
 async function initAudioAndVisuals() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContextClass();
+    // "playback"-vihje antaa Androidille suuren äänipuskurin, jolloin musiikki ei rätise
+    audioCtx = new AudioContextClass({ latencyHint: "playback" });
 
     const source = audioCtx.createMediaElementSource(audio);
     analyser = audioCtx.createAnalyser();
     
     analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.70; // Nopeampi vaste
+    analyser.smoothingTimeConstant = 0.70;
 
     source.connect(analyser);
     analyser.connect(audioCtx.destination);
@@ -107,13 +124,17 @@ const lightIntervals = [
   [119.0, 120.3]
 ];
 
-// 3. Reaaliaikainen valo- ja rytmisilmukka
+let prevQuietMode = false;
+let prevIlluminated = false;
+
+// 3. Kevyt ja nopea renderöintisilmukka (Suorat GPU-kutsut)
 function renderLoop() {
   analyser.getByteFrequencyData(dataArray);
 
-  const subBass = getAverageRange(dataArray, 1, 7) / 255;
-  const mids    = getAverageRange(dataArray, 10, 30) / 255;
-  const treble  = getAverageRange(dataArray, 40, 95) / 255;
+  // Koska fftSize = 256, indeksit on skaalattu puoleen (vastaa täsmälleen aiempia taajuuksia)
+  const subBass = getAverageRange(dataArray, 1, 4) / 255;
+  const mids    = getAverageRange(dataArray, 5, 15) / 255;
+  const treble  = getAverageRange(dataArray, 20, 48) / 255;
 
   const root = document.documentElement;
   const now = performance.now();
@@ -126,75 +147,66 @@ function renderLoop() {
   const totalVolume = subBass * 0.5 + mids * 0.3 + treble * 0.2;
   const isQuietMoment = isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0);
 
-  document.body.classList.toggle("quiet-mode", isQuietMoment);
-  root.style.setProperty("--color-lights-opacity", isQuietMoment ? "0" : "1");
+  if (isQuietMoment !== prevQuietMode) {
+    document.body.classList.toggle("quiet-mode", isQuietMoment);
+    prevQuietMode = isQuietMoment;
+  }
 
   // Aika etenee musiikin energian mukaan
   const speedMultiplier = 1 + subBass * 1.8 + treble * 0.8;
   timeScale += 0.012 * speedMultiplier;
 
-  // --- 8 KPL KLUBISPOTTIEN PALJON LAAJEMMAT LISSAJOUS-LIIKERADAT ---
-  const t = timeScale;
-  const rotTL = Math.sin(t * 0.72) * 85 + Math.cos(t * 0.32) * 55;
-  const rotTR = Math.cos(t * 0.65) * 90 - Math.sin(t * 0.28) * 50;
-  const rotBL = -Math.sin(t * 0.68) * 85 + Math.cos(t * 0.42) * 50;
-  const rotBR = -Math.cos(t * 0.78) * 80 + Math.sin(t * 0.36) * 60;
-
-  const rotTC = Math.sin(t * 0.92 + 1.2) * 85 + Math.cos(t * 0.42) * 50;
-  const rotBC = -Math.cos(t * 0.85 + 0.8) * 85 - Math.sin(t * 0.38) * 50;
-  const rotML = Math.cos(t * 0.68 + 2.1) * 80 + Math.sin(t * 0.48) * 55;
-  const rotMR = -Math.sin(t * 0.88 + 1.7) * 85 + Math.cos(t * 0.35) * 50;
-
-  // 5 valkoisen hakuspotin pehmeät liikkeet
-  const wT = now * 0.0006;
-  const whiteRot1 = Math.sin(wT * 0.8) * 65 + (now * 0.008) % 360;
-  const whiteRot2 = -Math.cos(wT * 0.7) * 70 - (now * 0.007) % 360;
-  const whiteRot3 = Math.sin(wT * 1.1 + 1.5) * 55 + Math.cos(wT * 0.5) * 40;
-  const whiteRot4 = -Math.sin(wT * 0.9 + 2.0) * 60 - Math.sin(wT * 0.4) * 40;
-  const whiteRot5 = Math.cos(wT * 0.65) * 75;
-
-  // --- VÄRIEN VAIHTO MUSIIKIN TAHDIKKAASTI (PALAUTETTU & HERKISTETTY) ---
-  const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
-
-  if (!isQuietMoment && (subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
-    colorIdx = (colorIdx + 1) % PALETTE.length;
-    root.style.setProperty("--active-color", PALETTE[colorIdx].primary);
-    root.style.setProperty("--secondary-color", PALETTE[colorIdx].secondary);
-    lastBeat = now;
-  }
-
-// --- HALLITTU STROBO & VÄLKE ---
-  // Peruskirkkaus: valot loistavat vakaasti
-  if (beatEnergy > 0.70) {
-    beamIntensity = 0.85 + Math.random() * 0.15;
-  } else {
-    beamIntensity = Math.max(0.40, beamIntensity * 0.92);
-  }
-
-  let strobeGate = 1.0;
-
   if (!isQuietMoment) {
-    // 1. Build-up ennen droppia (73.5s - 81.4s): asteittain kiihtyvä strobo
+    // Päivitetään vain värilliset spotit kun ne ovat näkyvissä
+    const t = timeScale;
+    spotTL.style.transform = `rotate(${(Math.sin(t * 0.72) * 85 + Math.cos(t * 0.32) * 55).toFixed(1)}deg)`;
+    spotTR.style.transform = `rotate(${(Math.cos(t * 0.65) * 90 - Math.sin(t * 0.28) * 50).toFixed(1)}deg)`;
+    spotBL.style.transform = `rotate(${(-Math.sin(t * 0.68) * 85 + Math.cos(t * 0.42) * 50).toFixed(1)}deg)`;
+    spotBR.style.transform = `rotate(${(-Math.cos(t * 0.78) * 80 + Math.sin(t * 0.36) * 60).toFixed(1)}deg)`;
+    spotTC.style.transform = `rotate(${(Math.sin(t * 0.92 + 1.2) * 85 + Math.cos(t * 0.42) * 50).toFixed(1)}deg)`;
+    spotBC.style.transform = `rotate(${(-Math.cos(t * 0.85 + 0.8) * 85 - Math.sin(t * 0.38) * 50).toFixed(1)}deg)`;
+    spotML.style.transform = `rotate(${(Math.cos(t * 0.68 + 2.1) * 80 + Math.sin(t * 0.48) * 55).toFixed(1)}deg)`;
+    spotMR.style.transform = `rotate(${(-Math.sin(t * 0.88 + 1.7) * 85 + Math.cos(t * 0.35) * 50).toFixed(1)}deg)`;
+
+    // Värien vaihto (vain silloin kun väri oikeasti vaihtuu, max ~5 kertaa sekunnissa)
+    const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
+    if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
+      colorIdx = (colorIdx + 1) % PALETTE.length;
+      root.style.setProperty("--active-color", PALETTE[colorIdx].primary);
+      root.style.setProperty("--secondary-color", PALETTE[colorIdx].secondary);
+      lastBeat = now;
+    }
+
+    if (beatEnergy > 0.70) {
+      beamIntensity = 0.85 + Math.random() * 0.15;
+    } else {
+      beamIntensity = Math.max(0.40, beamIntensity * 0.92);
+    }
+
+    let strobeGate = 1.0;
     if (currentTime >= 73.5 && currentTime <= 81.4) {
       const p = (currentTime - 73.5) / (81.4 - 73.5);
-      const cycleMs = 85 - p * 52; // 85ms -> 33ms
+      const cycleMs = 85 - p * 52;
       strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.0;
-    }
-    // 2. Vain kaikkein voimakkaimmat aksentti-iskut ja dropit (kynnys nostettu 0.84:ään)
-    else if (subBass > 0.84 && mids > 0.70) {
-      // Lyhyt, napakka leikkaus vain iskun harjalla
+    } else if (subBass > 0.84 && mids > 0.70) {
       strobeGate = (Math.floor(now / 38) % 2 === 0) ? 1.0 : 0.15;
     }
-    // 3. Normaali tanssirytmi: EI stroboa, valot loistavat täysillä
-    else {
-      strobeGate = 1.0;
+
+    const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
+    const finalSpotOpacity = ((beamIntensity + subtleSparkle) * strobeGate).toFixed(2);
+
+    for (let i = 0; i < allColorSpots.length; i++) {
+      allColorSpots[i].style.opacity = finalSpotOpacity;
     }
   } else {
-    strobeGate = 0.0;
+    // Päivitetään vain valkoiset hakuspotit kun ollaan rauhallisessa kohdassa
+    const wT = now * 0.0006;
+    beam1.style.transform = `rotate(${(Math.sin(wT * 0.8) * 65 + (now * 0.008) % 360).toFixed(1)}deg)`;
+    beam2.style.transform = `rotate(${(-Math.cos(wT * 0.7) * 70 - (now * 0.007) % 360).toFixed(1)}deg)`;
+    beam3.style.transform = `rotate(${(Math.sin(wT * 1.1 + 1.5) * 55 + Math.cos(wT * 0.5) * 40).toFixed(1)}deg)`;
+    beam4.style.transform = `rotate(${(-Math.sin(wT * 0.9 + 2.0) * 60 - Math.sin(wT * 0.4) * 40).toFixed(1)}deg)`;
+    beam5.style.transform = `rotate(${(Math.cos(wT * 0.65) * 75).toFixed(1)}deg)`;
   }
-
-  // Diskantin hento kimmellys
-  const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
 
   // --- 1. AJASTUS: 2.5 SEKUNTIA ENNEN "ALL OF THE LIGHTS" ---
   let isSingingLights = false;
@@ -203,7 +215,6 @@ function renderLoop() {
 
   for (const [start, end] of lightIntervals) {
     const countdownStart = start - 2.5;
-
     if (currentTime >= countdownStart && currentTime < start) {
       buildupActive = true;
       const elapsed = currentTime - countdownStart;
@@ -216,87 +227,50 @@ function renderLoop() {
     }
   }
 
-  sideSigns.forEach(sign => {
-    sign.classList.toggle("illuminated", isSingingLights);
-  });
+  if (isSingingLights !== prevIlluminated) {
+    sideSigns.forEach(sign => sign.classList.toggle("illuminated", isSingingLights));
+    prevIlluminated = isSingingLights;
+  }
 
-// --- 2. LAVAVALOJEN SYTYTTÄMINEN ---
+  // --- 2. LAVAVALOJEN SYTYTTÄMINEN ---
   if (buildupActive || isSingingLights) {
-    // ALL OF THE LIGHTS -vaihe:
-    // Syttyvät 2.5s aikana vuorotellen ja loistavat laulun ajan
     topLights.forEach((light, i) => {
       light.classList.remove("solid-on");
       light.classList.toggle("active", i <= activeStep);
     });
-
     bottomLights.forEach((light, i) => {
       light.classList.remove("solid-on");
       light.classList.toggle("active", (5 - i) <= activeStep);
     });
-
   } else {
-    // ALL OF THE LIGHTS -kohtien ulkopuolella:
-    // Kaikki 12 lamppua välähtävät yhtenäisesti VAIN matalan bassoniskun (subBass > 0.80) kohdalla
     const isBassHit = !isQuietMoment && (subBass > 0.80);
-
     topLights.forEach(light => {
       light.classList.remove("active");
       light.classList.toggle("solid-on", isBassHit);
     });
-
     bottomLights.forEach(light => {
       light.classList.remove("active");
       light.classList.toggle("solid-on", isBassHit);
     });
   }
 
-
-// --- KORTIN ÄÄRIVIIVOJA KIERTÄVÄT VALOMATOT ---
-  // 1. Kiertosuunta vaihtuu jokaisen "ALL OF THE LIGHTS" -kohdan kohdalla
-  let wormDir = 1; // 1 = myötäpäivään, -1 = vastapäivään
+  // --- 3. KORTIN SYKKIMINEN & VALOMATOT (SUORA GPU-TRANSFORMAATIO) ---
+  let wormDir = 1;
   for (const [start] of lightIntervals) {
-    if (currentTime >= start) {
-      wormDir *= -1; // Käännetään suunta jokaisesta ohitetusta kohdasta
-    }
+    if (currentTime >= start) wormDir *= -1;
   }
 
-  // 2. Nopeus: rauhallisissa kohdissa hyvin hiljainen, intensiivisissä kova vauhti
-  let wormSpeed = 0.25; // Rauhallinen perusnopeus
+  let wormSpeed = 0.25;
   if (!isQuietMoment) {
     const energy = subBass * 2.4 + mids * 1.5 + treble * 0.8;
     wormSpeed = 0.55 + energy * 2.2;
   }
 
-  // Päivitetään kulma (varmistetaan aina positiivinen asteluku 0–360)
   wormAngle = (wormAngle + wormDir * wormSpeed + 360000) % 360;
-  root.style.setProperty("--worm-rot", `${wormAngle.toFixed(2)}deg`);
+  wormSpinner.style.transform = `rotate(${wormAngle.toFixed(1)}deg)`;
 
-
-  // CSS-muuttujat animaatioille
-  root.style.setProperty("--bass-intensity", subBass.toFixed(3));
-  const punchyBass = Math.pow(subBass, 1.4);
-  const scaleValue = 1 + punchyBass * 0.09;
-  root.style.setProperty("--bass-scale", scaleValue.toFixed(4));
-  root.style.setProperty("--spot-beam-intensity", beamIntensity.toFixed(3));
-  root.style.setProperty("--sparkle-factor", subtleSparkle.toFixed(3));
-  root.style.setProperty("--strobe-gate", strobeGate.toFixed(2));
-
-  // 8 värispotin kulmat
-  root.style.setProperty("--spot-rot-tl", `${rotTL.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-tr", `${rotTR.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-bl", `${rotBL.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-br", `${rotBR.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-tc", `${rotTC.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-bc", `${rotBC.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-ml", `${rotML.toFixed(1)}deg`);
-  root.style.setProperty("--spot-rot-mr", `${rotMR.toFixed(1)}deg`);
-
-  // 5 valkoisen spottivalon kulmat
-  root.style.setProperty("--white-rot-1", `${whiteRot1.toFixed(1)}deg`);
-  root.style.setProperty("--white-rot-2", `${whiteRot2.toFixed(1)}deg`);
-  root.style.setProperty("--white-rot-3", `${whiteRot3.toFixed(1)}deg`);
-  root.style.setProperty("--white-rot-4", `${whiteRot4.toFixed(1)}deg`);
-  root.style.setProperty("--white-rot-5", `${whiteRot5.toFixed(1)}deg`);
+  const scaleValue = 1 + Math.pow(subBass, 1.4) * 0.09;
+  inviteCard.style.transform = `scale(${scaleValue.toFixed(3)})`;
 
   requestAnimationFrame(renderLoop);
 }
@@ -309,7 +283,7 @@ rsvpForm.addEventListener("submit", async (e) => {
   submitBtn.disabled = true;
   submitBtn.textContent = "LÄHETETÄÄN...";
 
-const formData = new FormData(rsvpForm);
+  const formData = new FormData(rsvpForm);
   const payload = {
     name: formData.get("name"),
     avec: formData.get("avec") || "",

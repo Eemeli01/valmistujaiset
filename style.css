@@ -1,10 +1,8 @@
 :root {
   --bg-color: #050508;
-  --card-bg: rgba(16, 16, 24, 0.76);
+  --card-bg: #101018;
   --active-color: #00f0ff;
   --secondary-color: #ff007f;
-  --bass-intensity: 0;
-  --bass-scale: 1;
 }
 
 * {
@@ -70,95 +68,81 @@ body {
   margin-bottom: 28px;
 }
 
-/* --- KLUBIN VALOT & SPOTIT --- */
+/* --- KLUBIN VALOT & SPOTIT (KEVENNETTY GPU-TASO) --- */
 #disco-lights {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
+  contain: strict;
 }
 
-/* --- KLUBIN VÄRIKKÄÄT SPOTTIVALOT (MOBIILIOPTIMOITU ILMAN GPU-BLURRIA) --- */
+/* Pienennetty 160vmax -> 110vmax: säästää 55% näytönohjaimen pikselikaistaa */
 .spotlight {
   position: absolute;
-  width: 150vmax;
-  height: 150vmax;
+  width: 110vmax;
+  height: 110vmax;
   border-radius: 50%;
-  opacity: calc(
-    (var(--spot-beam-intensity, 0.45) + var(--sparkle-factor, 0)) 
-    * var(--color-lights-opacity, 1) 
-    * var(--strobe-gate, 1)
-  );
-  /* Korvattu raskas filter:blur pehmeällä gradientilla, jotta mobiili-GPU ei kyykkää */
+  opacity: 0.45;
   will-change: transform, opacity;
-  transform: translateZ(0); /* Pakotettu kevyt GPU-taso */
   pointer-events: none;
+  backface-visibility: hidden;
 }
 
-/* Pehmeät väripysäkit luovat valokeilan suoraan ilman blur-filtteriä */
 .spot-tl {
-  top: -75vmax;
-  left: -75vmax;
-  background: conic-gradient(from 30deg at 50% 50%, transparent 0deg, var(--active-color) 18deg, transparent 36deg);
-  transform: rotate(var(--spot-rot-tl, 0deg)) translateZ(0);
+  top: -55vmax;
+  left: -55vmax;
+  background: conic-gradient(from 30deg at 50% 50%, transparent 0deg, var(--active-color) 18deg, transparent 38deg);
 }
 
 .spot-tr {
-  top: -75vmax;
-  right: -75vmax;
-  background: conic-gradient(from 90deg at 50% 50%, transparent 0deg, var(--secondary-color) 18deg, transparent 36deg);
-  transform: rotate(var(--spot-rot-tr, 0deg)) translateZ(0);
+  top: -55vmax;
+  right: -55vmax;
+  background: conic-gradient(from 90deg at 50% 50%, transparent 0deg, var(--secondary-color) 18deg, transparent 38deg);
 }
 
 .spot-bl {
-  bottom: -75vmax;
-  left: -75vmax;
-  background: conic-gradient(from 180deg at 50% 50%, transparent 0deg, var(--secondary-color) 20deg, transparent 40deg);
-  transform: rotate(var(--spot-rot-bl, 0deg)) translateZ(0);
+  bottom: -55vmax;
+  left: -55vmax;
+  background: conic-gradient(from 180deg at 50% 50%, transparent 0deg, var(--secondary-color) 20deg, transparent 42deg);
 }
 
 .spot-br {
-  bottom: -75vmax;
-  right: -75vmax;
-  background: conic-gradient(from 270deg at 50% 50%, transparent 0deg, var(--active-color) 20deg, transparent 40deg);
-  transform: rotate(var(--spot-rot-br, 0deg)) translateZ(0);
+  bottom: -55vmax;
+  right: -55vmax;
+  background: conic-gradient(from 270deg at 50% 50%, transparent 0deg, var(--active-color) 20deg, transparent 42deg);
 }
 
 .spot-tc {
-  top: -75vmax;
-  left: calc(50% - 75vmax);
-  background: conic-gradient(from 75deg at 50% 50%, transparent 0deg, var(--secondary-color) 15deg, transparent 30deg);
-  transform: rotate(var(--spot-rot-tc, 0deg)) translateZ(0);
+  top: -55vmax;
+  left: calc(50% - 55vmax);
+  background: conic-gradient(from 75deg at 50% 50%, transparent 0deg, var(--secondary-color) 15deg, transparent 32deg);
 }
 
 .spot-bc {
-  bottom: -75vmax;
-  left: calc(50% - 75vmax);
-  background: conic-gradient(from 255deg at 50% 50%, transparent 0deg, var(--active-color) 16deg, transparent 32deg);
-  transform: rotate(var(--spot-rot-bc, 0deg)) translateZ(0);
+  bottom: -55vmax;
+  left: calc(50% - 55vmax);
+  background: conic-gradient(from 255deg at 50% 50%, transparent 0deg, var(--active-color) 16deg, transparent 34deg);
 }
 
 .spot-ml {
-  top: calc(50% - 75vmax);
-  left: -75vmax;
-  background: conic-gradient(from 350deg at 50% 50%, transparent 0deg, var(--active-color) 16deg, transparent 34deg);
-  transform: rotate(var(--spot-rot-ml, 0deg)) translateZ(0);
+  top: calc(50% - 55vmax);
+  left: -55vmax;
+  background: conic-gradient(from 350deg at 50% 50%, transparent 0deg, var(--active-color) 16deg, transparent 36deg);
 }
 
 .spot-mr {
-  top: calc(50% - 75vmax);
-  right: -75vmax;
-  background: conic-gradient(from 170deg at 50% 50%, transparent 0deg, var(--secondary-color) 16deg, transparent 34deg);
-  transform: rotate(var(--spot-rot-mr, 0deg)) translateZ(0);
+  top: calc(50% - 55vmax);
+  right: -55vmax;
+  background: conic-gradient(from 170deg at 50% 50%, transparent 0deg, var(--secondary-color) 16deg, transparent 36deg);
 }
 
-/* Ambient-pehmennykset: pidetään kevyinä */
 .ambient-glow {
   position: absolute;
   width: 100vw;
-  height: 50vh;
-  opacity: calc((0.2 + var(--bass-intensity) * 0.4) * var(--color-lights-opacity, 1));
+  height: 45vh;
+  opacity: 0.35;
   pointer-events: none;
 }
 
@@ -172,71 +156,57 @@ body {
   background: radial-gradient(ellipse at center, var(--secondary-color) 0%, transparent 65%);
 }
 
-/* --- 5 KPL VALKOISET HAKUSPOTIT --- */
+/* 5 KPL VALKOISET HAKUSPOTIT (Näkyvissä vain quiet-modessa, muulloin display:none) */
 .searchlight-beam {
   position: absolute;
-  width: 140vmax;
-  height: 140vmax;
+  width: 110vmax;
+  height: 110vmax;
   border-radius: 50%;
-  opacity: 0;
+  display: none;
+  opacity: 0.85;
   pointer-events: none;
-  transition: opacity 0.5s ease;
   will-change: transform;
-  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .beam-1 {
-  top: -70vmax;
-  left: -70vmax;
+  top: -55vmax;
+  left: -55vmax;
   background: conic-gradient(from 20deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.8) 7deg, transparent 15deg);
-  transform: rotate(var(--white-rot-1, 0deg)) translateZ(0);
 }
 
 .beam-2 {
-  bottom: -70vmax;
-  right: -70vmax;
+  bottom: -55vmax;
+  right: -55vmax;
   background: conic-gradient(from 200deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.75) 6deg, transparent 14deg);
-  transform: rotate(var(--white-rot-2, 0deg)) translateZ(0);
 }
 
 .beam-3 {
-  top: -70vmax;
-  right: -25vmax;
+  top: -55vmax;
+  right: -20vmax;
   background: conic-gradient(from 110deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.7) 7deg, transparent 16deg);
-  transform: rotate(var(--white-rot-3, 0deg)) translateZ(0);
 }
 
 .beam-4 {
-  bottom: -70vmax;
-  left: -25vmax;
+  bottom: -55vmax;
+  left: -20vmax;
   background: conic-gradient(from 290deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.75) 6deg, transparent 14deg);
-  transform: rotate(var(--white-rot-4, 0deg)) translateZ(0);
 }
 
 .beam-5 {
-  top: -70vmax;
+  top: -55vmax;
   left: -15vmax;
   background: conic-gradient(from 70deg at 50% 50%, transparent 0deg, rgba(255, 255, 255, 0.65) 8deg, transparent 18deg);
-  transform: rotate(var(--white-rot-5, 0deg)) translateZ(0);
 }
 
+/* Kun rauhallinen tila on päällä, kytketään valkoiset päälle ja värilliset kokonaan pois */
 body.quiet-mode .searchlight-beam {
-  opacity: 0.85;
-}
-
-body.quiet-mode #disco-lights::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 70%);
-  pointer-events: none;
+  display: block;
 }
 
 body.quiet-mode .spotlight,
-body.quiet-mode .ambient-glow,
-body.quiet-mode #strobe-flash {
-  opacity: 0 !important;
-  visibility: hidden;
+body.quiet-mode .ambient-glow {
+  display: none !important;
 }
 
 /* --- HORISONTAALISET LAVAVALOT --- */
@@ -250,13 +220,8 @@ body.quiet-mode #strobe-flash {
   pointer-events: none;
 }
 
-.blinder-top {
-  top: 14px;
-}
-
-.blinder-bottom {
-  bottom: 14px;
-}
+.blinder-top { top: 14px; }
+.blinder-bottom { bottom: 14px; }
 
 .blinder-light {
   width: 26px;
@@ -264,48 +229,37 @@ body.quiet-mode #strobe-flash {
   border-radius: 50%;
   background: #0d0d14;
   border: 2px solid rgba(255, 255, 255, 0.15);
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
-  transition: background 0.04s ease, border-color 0.04s ease, box-shadow 0.04s ease, transform 0.04s ease;
+  transition: transform 0.04s ease, background 0.04s ease;
 }
 
 .blinder-light.active {
-  background: radial-gradient(circle, #ffffff 30%, #ffd700 100%);
+  background: #ffd700;
   border-color: #ffffff;
-  box-shadow: 0 0 14px #ffd700, 0 0 28px #ff9900;
+  box-shadow: 0 0 14px #ffd700;
   transform: scale(1.15);
 }
 
 .blinder-light.solid-on {
   background: #ffffff !important;
   border-color: #ffd700 !important;
-  box-shadow: 0 0 22px #ffffff, 0 0 45px #ffd700 !important;
+  box-shadow: 0 0 20px #ffd700 !important;
   transform: scale(1.2) !important;
 }
 
 @media (max-width: 480px) {
-  .stage-blinders {
-    gap: 10px;
-  }
-  .blinder-light {
-    width: 20px;
-    height: 20px;
-  }
-  .blinder-top {
-    top: 10px;
-  }
-  .blinder-bottom {
-    bottom: 10px;
-  }
+  .stage-blinders { gap: 10px; }
+  .blinder-light { width: 20px; height: 20px; }
+  .blinder-top { top: 10px; }
+  .blinder-bottom { bottom: 10px; }
 }
 
-/* --- PYYSTYSUUNTAISET NEONKYLTIT (NÄKYVÄT AINA, MYÖS MOBIILISSA) --- */
+/* --- PYYSTYSUUNTAISET NEONKYLTIT --- */
 .side-sign {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Montserrat", sans-serif;
   font-weight: 900;
-  /* Skaalautuu näytön mukaan mahtuen aina pystysuunnassa */
   font-size: clamp(0.72rem, 2.5vh, 1.25rem);
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -316,12 +270,9 @@ body.quiet-mode #strobe-flash {
   pointer-events: none;
   display: block !important;
   visibility: visible !important;
-  
   color: #0c0c12;
   -webkit-text-stroke: 1.2px #1c1c28;
-  text-shadow: none;
   opacity: 0.45;
-  transition: opacity 0.08s ease, color 0.08s ease, -webkit-text-stroke 0.08s ease, text-shadow 0.08s ease;
 }
 
 .left-sign {
@@ -337,11 +288,7 @@ body.quiet-mode #strobe-flash {
   color: #fffde8;
   -webkit-text-stroke: 1.6px #ffd700;
   opacity: 1;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.95),
-    0 0 20px #ffd700,
-    0 0 40px #ffae00,
-    0 0 70px rgba(255, 174, 0, 0.85);
+  text-shadow: 0 0 12px #ffd700, 0 0 28px #ffae00;
 }
 
 /* Kelluva mykistyspainike */
@@ -349,7 +296,7 @@ body.quiet-mode #strobe-flash {
   position: fixed;
   top: 14px;
   right: 14px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   border-radius: 50%;
@@ -358,79 +305,78 @@ body.quiet-mode #strobe-flash {
   cursor: pointer;
   z-index: 50;
   font-size: 1rem;
-  backdrop-filter: blur(10px);
-  transition: all 0.2s ease;
-}
-
-.icon-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
 }
 
 .hidden {
   display: none !important;
 }
 
-/* --- KORTIN KOKO JA ASEMOINTI (KAPEAMPI JA MATALAMPI) --- */
+/* --- KORTIN KOKO JA ASEMOINTI --- */
 .invite-container {
-  /* Jätetään tilaa pystykylteille (32px kummallekin puolelle) */
   width: calc(100% - 64px);
-  max-width: 375px; /* Selvästi kapeampi kortti */
-  padding: 50px 0; /* Varmistaa että lavavaloille jää ylös ja alas vapaa tila */
+  max-width: 375px;
+  padding: 50px 0;
   z-index: 10;
   display: flex;
   justify-content: center;
 }
 
-/* --- KORTTI JA VALOMATOT (MOBIILI-OPTIMOITU) --- */
+/* --- KORTTI & LAITTEISTOKIIHDYTETYT VALOMADOT --- */
 .invite-card {
   position: relative;
   width: 100%;
-  background: rgba(14, 14, 22, 0.92); /* Vakaa tausta, ei tahmaavaa backdrop-filteriä */
+  background: var(--card-bg);
   border-radius: 20px;
   padding: 18px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transform: scale(var(--bass-scale)) translateZ(0);
-  transform-origin: center center;
   will-change: transform;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-  overflow: visible;
+  transform: translateZ(0);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
-/* Valomadot ilman raskasta kolminkertaista drop-shadow-filtteriä */
-.invite-card::before {
+/* Kehys, joka leikkaa pyörivän valomadon siistiksi 7px reunukseksi */
+.worm-border {
+  position: absolute;
+  inset: -7px;
+  border-radius: 26px;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+  box-shadow: 0 0 18px var(--active-color);
+}
+
+/* Sisus peitetään tummalla korttitaustalla */
+.worm-border::after {
   content: "";
   position: absolute;
-  inset: -6px;
-  border-radius: 26px;
-  padding: 6px;
-  box-sizing: border-box;
-
-  background: conic-gradient(
-    from var(--worm-rot, 0deg) at 50% 50%,
-    transparent 0deg,
-    var(--active-color) 10deg,
-    #ffffff 22deg,
-    var(--active-color) 34deg,
-    transparent 46deg,
-    transparent 180deg,
-    var(--secondary-color) 190deg,
-    #ffffff 202deg,
-    var(--secondary-color) 214deg,
-    transparent 226deg
-  );
-
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-
-  pointer-events: none;
-  z-index: 2;
-  box-shadow: 0 0 16px var(--active-color); /* drop-shadowin tilalle nopea box-shadow */
+  inset: 7px;
+  background: var(--card-bg);
+  border-radius: 19px;
 }
 
-/* Kortin tiivistetyt sisällöt */
+/* Pyörivä kiekko: GPU pyörittää tätä transform:rotate():lla 0% CPU-kuormalla! */
+.worm-spinner {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    var(--active-color) 10deg,
+    #ffffff 24deg,
+    var(--active-color) 38deg,
+    transparent 52deg,
+    transparent 180deg,
+    var(--secondary-color) 190deg,
+    #ffffff 204deg,
+    var(--secondary-color) 218deg,
+    transparent 232deg
+  );
+  will-change: transform;
+}
+
+/* Kortin sisällöt */
 .card-header {
   text-align: center;
   margin-bottom: 10px;
@@ -449,12 +395,10 @@ body.quiet-mode #strobe-flash {
 }
 
 .party-title {
-  font-size: 1.35rem; /* Pienennetty siistiksi */
+  font-size: 1.35rem;
   font-weight: 900;
   letter-spacing: 1px;
-  background: linear-gradient(135deg, #fff 40%, var(--active-color) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
   margin-bottom: 2px;
 }
 
@@ -467,13 +411,13 @@ body.quiet-mode #strobe-flash {
 }
 
 .event-details {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
   padding: 8px 12px;
   margin-bottom: 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px; /* Pienempi väli */
+  gap: 6px;
 }
 
 .detail-row {
@@ -482,33 +426,12 @@ body.quiet-mode #strobe-flash {
   gap: 8px;
 }
 
-.detail-row .icon {
-  font-size: 1.05rem;
-}
+.detail-row .icon { font-size: 1.05rem; }
+.detail-row strong { display: block; font-size: 0.8rem; line-height: 1.2; }
+.detail-row p { color: #888899; font-size: 0.72rem; line-height: 1.2; }
 
-.detail-row strong {
-  display: block;
-  font-size: 0.8rem;
-  line-height: 1.2;
-}
-
-.detail-row p {
-  color: #888899;
-  font-size: 0.72rem;
-  line-height: 1.2;
-}
-
-/* Tiivistetty RSVP-lomake */
-.form-group {
-  margin-bottom: 8px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.75rem;
-  margin-bottom: 2px;
-  color: #aaa;
-}
+.form-group { margin-bottom: 8px; }
+.form-group label { display: block; font-size: 0.75rem; margin-bottom: 2px; color: #aaa; }
 
 input[type="text"],
 textarea {
@@ -520,23 +443,16 @@ textarea {
   color: #fff;
   font-size: 0.82rem;
   outline: none;
-  transition: border-color 0.2s;
 }
 
-textarea {
-  height: 48px;
-  resize: none;
-}
+textarea { height: 48px; resize: none; }
 
 input[type="text"]:focus,
 textarea:focus {
   border-color: var(--active-color);
 }
 
-.radio-options {
-  display: flex;
-  gap: 6px;
-}
+.radio-options { display: flex; gap: 6px; }
 
 .radio-btn {
   flex: 1;
@@ -550,12 +466,9 @@ textarea:focus {
   cursor: pointer;
   font-size: 0.74rem;
   text-align: center;
-  transition: all 0.2s ease;
 }
 
-.radio-btn input {
-  display: none;
-}
+.radio-btn input { display: none; }
 
 .radio-btn:has(input:checked) {
   background: rgba(0, 240, 255, 0.15);
@@ -573,57 +486,22 @@ textarea:focus {
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.neon-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px var(--active-color);
-}
+.full-width { width: 100%; margin-top: 4px; }
 
-.full-width {
-  width: 100%;
-  margin-top: 4px;
-}
-
-.pulse {
-  animation: neon-pulse 1.8s infinite ease-in-out;
-}
+.pulse { animation: neon-pulse 1.8s infinite ease-in-out; }
 
 @keyframes neon-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
-  }
-  50% {
-    transform: scale(1.04);
-    box-shadow: 0 0 30px rgba(255, 0, 127, 0.8);
-  }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
 }
 
 .rsvp-success {
   text-align: center;
   padding: 16px 0;
-  animation: fadeIn 0.4s ease forwards;
 }
 
-.rsvp-success .check-icon {
-  font-size: 2rem;
-  margin-bottom: 6px;
-}
-
-.rsvp-success h3 {
-  font-size: 1.15rem;
-  color: #00ff66;
-  margin-bottom: 4px;
-}
-
-.rsvp-success p {
-  color: #aaa;
-  font-size: 0.82rem;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.rsvp-success .check-icon { font-size: 2rem; margin-bottom: 6px; }
+.rsvp-success h3 { font-size: 1.15rem; color: #00ff66; margin-bottom: 4px; }
+.rsvp-success p { color: #aaa; font-size: 0.82rem; }
