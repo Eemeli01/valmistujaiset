@@ -171,7 +171,7 @@ function renderLoop() {
   const speedMultiplier = 1 + subBass * 1.8 + treble * 0.8;
   timeScale += 0.012 * speedMultiplier;
 
-  const maxLen = Math.hypot(cw, ch) * 1.15;
+  const maxLen = Math.hypot(cw, ch) * 0.58;
 
 if (!isQuietMoment) {
     // Rauhallisempi värien vaihto (vähintään 420ms väli, vain selkeissä iskuissa)
