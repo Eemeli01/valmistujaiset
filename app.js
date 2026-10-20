@@ -1,8 +1,9 @@
 // Aseta tähän GitHubin Personal Access Token (PAT), jotta tiedosto voidaan tallentaa suoraan repoosi
-const GITHUB_TOKEN = "V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";
+// const GITHUB_TOKEN = "";;
 const GITHUB_OWNER = "Eemeli01";
 const GITHUB_REPO = "valmistujaiset";
 const GITHUB_PATH = "responses.json";
+const RSVP_ENDPOINT = "https://formspree.io/f/xaeqgelv";
 
 let colorIdx = 0;
 let lastBeat = 0;
@@ -134,49 +135,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Funktio vastausten tallentamiseksi suoraan GitHubiin (responses.json)
-async function saveResponseToGitHub(payload) {
-  if (GITHUB_TOKEN.includes("VAIHDA")) return; // Ohitetaan jos tokenia ei ole asetettu
-
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
-  try {
-    let sha = null;
-    let existingData = [];
-
-    const getRes = await fetch(url, {
-      headers: { Authorization: `token ${GITHUB_TOKEN}` }
-    });
-
-    if (getRes.ok) {
-      const fileData = await getRes.json();
-      sha = fileData.sha;
-      try {
-        existingData = JSON.parse(atob(fileData.content));
-      } catch (e) {
-        existingData = [];
-      }
-    }
-
-    existingData.push(payload);
-
-    const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(existingData, null, 2))));
-
-    await fetch(url, {
-      method: "PUT",
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: `RSVP response from ${payload.name}`,
-        content: contentEncoded,
-        sha: sha
-      })
-    });
-  } catch (err) {
-    console.error("GitHub save error:", err);
-  }
-}
 
 // Neon-klubipaletti
 const PALETTE = [
@@ -383,18 +341,16 @@ rsvpForm.addEventListener("submit", async (e) => {
     timestamp: new Date().toISOString()
   };
 
-  // Tallennetaan tiedosto GitHubiin taustalla
-  saveResponseToGitHub(payload);
-
+  // Jos Formspree ID on vielä asettamatta, näytetään onnistuminen suoraan viiveellä testinä
   if (RSVP_ENDPOINT.includes("YOUR_FORM_ID")) {
     setTimeout(() => {
       showSuccess(attendance);
-    }, 600);
+    }, 500);
     return;
   }
 
   try {
-    await fetch(RSVP_ENDPOINT, {
+    const res = await fetch(RSVP_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -402,9 +358,17 @@ rsvpForm.addEventListener("submit", async (e) => {
       },
       body: JSON.stringify(payload)
     });
+
+    if (res.ok) {
+      showSuccess(attendance);
+    } else {
+      alert("Ilmoittautumisen lähetys epäonnistui. Yritä uudelleen!");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "LÄHETÄ VASTAUS";
+    }
+  } catch (err) {
+    // Jos yhteys tökkii, näytetään silti käyttäjälle onnistumisviesti, ettei nappi jää jumiin
     showSuccess(attendance);
-  } catch {
-    showSuccess(attendance); // Näytetään silti onnistumisviesti käyttäjälle
   }
 });
 
@@ -417,18 +381,15 @@ function showSuccess(attendance) {
   const checkIcon = rsvpSuccess.querySelector(".check-icon");
 
   if (attendance === "declined") {
-    // Jos käyttäjä ei pääse, kortti näyttää vain kättely-emojin ja halutun tekstin ilman ylimääräisiä tervetuloja
     checkIcon.textContent = "🤝";
     successTitle.textContent = "Valinta tallennettu!";
     successText.textContent = "Pysytään yhteyksissä!";
     
-    // Piilotetaan kortin yläosan header ja event-details kokonaan, jotta näkymä on siisti
     const cardHeader = inviteCard.querySelector(".card-header");
     const eventDetails = inviteCard.querySelector(".event-details");
     if (cardHeader) cardHeader.style.display = "none";
     if (eventDetails) eventDetails.style.display = "none";
   } else {
-    // Jos pääsee paikalle: deadline korvataan kalenterilinkillä
     checkIcon.textContent = "✨";
     successTitle.textContent = "Olet listalla!";
     successText.textContent = "Vastauksesi on tallennettu. Nähdään Otaniemessä 9. tammikuuta!";
