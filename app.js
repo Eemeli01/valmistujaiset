@@ -296,6 +296,35 @@ if (!isQuietMoment) {
   requestAnimationFrame(renderLoop);
 }
 
+// Kalenteritiedoston (.ics) luonti ja lataus
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "add-to-calendar") {
+    e.preventDefault();
+    const icsData = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      "SUMMARY:Eemelin valmistujaiset",
+      "LOCATION:Otakaari 15, Espoo",
+      "DESCRIPTION:Eemelin DI-valmistujaisbileet Otaniemessä.",
+      "DTSTART:20270109T180000",
+      "DTEND:20270110T000000",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "eemelin-valmistujaiset.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+});
+
 // 4. RSVP-lomakkeen käsittely
 rsvpForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -305,16 +334,17 @@ rsvpForm.addEventListener("submit", async (e) => {
   submitBtn.textContent = "LÄHETETÄÄN...";
 
   const formData = new FormData(rsvpForm);
+  const attendance = formData.get("attendance"); // "attending" tai "declined"
   const payload = {
     name: formData.get("name"),
     avec: formData.get("avec") || "",
-    attendance: formData.get("attendance"),
+    attendance: attendance,
     message: formData.get("message") || ""
   };
 
   if (RSVP_ENDPOINT.includes("YOUR_FORM_ID")) {
     setTimeout(() => {
-      showSuccess();
+      showSuccess(attendance);
     }, 600);
     return;
   }
@@ -330,7 +360,7 @@ rsvpForm.addEventListener("submit", async (e) => {
     });
 
     if (res.ok) {
-      showSuccess();
+      showSuccess(attendance);
     } else {
       alert("Ilmoittautumisen lähetys epäonnistui. Yritä uudelleen!");
       submitBtn.disabled = false;
@@ -343,7 +373,21 @@ rsvpForm.addEventListener("submit", async (e) => {
   }
 });
 
-function showSuccess() {
+function showSuccess(attendance) {
   rsvpForm.classList.add("hidden");
   rsvpSuccess.classList.remove("hidden");
+
+  const successTitle = rsvpSuccess.querySelector("h3");
+  const successText = rsvpSuccess.querySelector("p");
+  const checkIcon = rsvpSuccess.querySelector(".check-icon");
+
+  if (attendance === "declined") {
+    checkIcon.textContent = "🤝";
+    successTitle.textContent = "Valinta tallennettu!";
+    successText.textContent = "Pysytään yhteyksissä!";
+  } else {
+    checkIcon.textContent = "✨";
+    successTitle.textContent = "Olet listalla!";
+    successText.textContent = "Vastauksesi on tallennettu. Nähdään Otaniemessä 9. tammikuuta!";
+  }
 }
