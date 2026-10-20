@@ -202,11 +202,10 @@ body {
   display: none !important;
 }
 
-/* --- KORTIN KOKO: KAPEAMPI SIVUILTA, VÄLJEMPI KORKEUSSUUNNASSA --- */
+/* --- KORTIN KOKO: 20 % KAPEAMPI JA 20 % LYHYEMPI --- */
 .invite-container {
-  /* Jätetään 44px tilaa kummallekin reunalle, jotta ALL OF THE LIGHTS mahtuu reilusti */
-  width: calc(100% - 88px);
-  max-width: 335px; /* Selvästi kapeampi profiili */
+  width: calc(100% - 104px);
+  max-width: 268px; /* 20 % kapeampi (335px -> 268px) */
   padding: 54px 0;
   z-index: 10;
   display: flex;
@@ -217,9 +216,8 @@ body {
   position: relative;
   width: 100%;
   background: var(--card-bg);
-  border-radius: 22px;
-  /* Väljempi pystysuunnassa (24px), tiiviimpi leveyssuunnassa (18px) */
-  padding: 24px 18px;
+  border-radius: 18px;
+  padding: 14px 14px; /* 20 % matalampi sisätila */
   will-change: transform;
   transform: translateZ(0);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
@@ -228,8 +226,8 @@ body {
 
 .worm-border {
   position: absolute;
-  inset: -6px;
-  border-radius: 28px;
+  inset: -5px;
+  border-radius: 23px;
   overflow: hidden;
   z-index: -1;
   pointer-events: none;
@@ -239,9 +237,9 @@ body {
 .worm-border::after {
   content: "";
   position: absolute;
-  inset: 6px;
+  inset: 5px;
   background: var(--card-bg);
-  border-radius: 22px;
+  border-radius: 18px;
 }
 
 .worm-spinner {
@@ -267,86 +265,86 @@ body {
   backface-visibility: hidden;
 }
 
-/* Kortin sisällöt väljemmällä pystytilalla */
+/* Kortin sisällöt skaalattuna 20 % tiiviimmiksi */
 .card-header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .badge {
   display: inline-block;
-  padding: 3px 12px;
-  border-radius: 10px;
+  padding: 2px 9px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   color: #00f0ff;
-  font-size: 0.68rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
 }
 
 .party-title {
-  font-size: 1.25rem;
+  font-size: 1.0rem;
   font-weight: 900;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   background: linear-gradient(135deg, #fff 40%, #00f0ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .host-name {
   color: #a0a0b2;
-  font-size: 0.76rem;
+  font-size: 0.64rem;
   font-weight: 500;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
 }
 
 .event-details {
   background: rgba(255, 255, 255, 0.04);
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-bottom: 16px;
+  border-radius: 11px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Väljempi riviväli */
+  gap: 6px;
   text-align: left;
 }
 
 .detail-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   text-align: left;
 }
 
 .detail-row .icon {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
 }
 
 .detail-row strong {
   display: block;
-  font-size: 0.82rem;
-  line-height: 1.25;
+  font-size: 0.68rem;
+  line-height: 1.15;
 }
 
 .detail-row p {
   color: #888899;
-  font-size: 0.74rem;
-  line-height: 1.25;
+  font-size: 0.62rem;
+  line-height: 1.15;
 }
 
 .form-group {
-  margin-bottom: 12px; /* Väljempi väli lomakekentille */
+  margin-bottom: 7px;
   text-align: left;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.76rem;
-  margin-bottom: 4px;
+  font-size: 0.64rem;
+  margin-bottom: 2px;
   color: #aaa;
   text-align: left;
 }
@@ -354,17 +352,17 @@ body {
 input[type="text"],
 textarea {
   width: 100%;
-  padding: 9px 12px;
+  padding: 6px 9px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  border-radius: 8px;
   color: #fff;
-  font-size: 0.84rem;
+  font-size: 0.70rem;
   outline: none;
 }
 
 textarea {
-  height: 54px;
+  height: 38px;
   resize: none;
 }
 
@@ -375,7 +373,7 @@ textarea:focus {
 
 .radio-options {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .radio-btn {
@@ -383,12 +381,12 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 6px;
+  padding: 5px 4px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.62rem;
   text-align: center;
 }
 
@@ -407,16 +405,16 @@ textarea:focus {
   color: #050508;
   border: none;
   border-radius: 50px;
-  padding: 12px 20px;
-  font-size: 0.86rem;
+  padding: 9px 16px;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   cursor: pointer;
 }
 
 .full-width {
   width: 100%;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .pulse {
@@ -430,9 +428,9 @@ textarea:focus {
 
 .rsvp-success {
   text-align: center;
-  padding: 18px 0;
+  padding: 14px 0;
 }
 
-.rsvp-success .check-icon { font-size: 2rem; margin-bottom: 6px; }
-.rsvp-success h3 { font-size: 1.15rem; color: #00ff66; margin-bottom: 4px; }
-.rsvp-success p { color: #aaa; font-size: 0.82rem; }
+.rsvp-success .check-icon { font-size: 1.6rem; margin-bottom: 4px; }
+.rsvp-success h3 { font-size: 0.95rem; color: #00ff66; margin-bottom: 3px; }
+.rsvp-success p { color: #aaa; font-size: 0.68rem; }
