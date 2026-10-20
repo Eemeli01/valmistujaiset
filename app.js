@@ -1,12 +1,12 @@
 const RSVP_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
 
-// Neon-klubipaletti
+// Neon-klubipaletti (RGB-muodossa nopeaan Canvas-piirtoon)
 const PALETTE = [
-  { primary: "#00f0ff", secondary: "#ff007f" },
-  { primary: "#7000ff", secondary: "#00ff66" },
-  { primary: "#ff0055", secondary: "#00f0ff" },
-  { primary: "#ffe600", secondary: "#7000ff" },
-  { primary: "#00ffcc", secondary: "#ff3300" }
+  { p: "0, 240, 255", s: "255, 0, 127" },
+  { p: "112, 0, 255", s: "0, 255, 102" },
+  { p: "255, 0, 85",  s: "0, 240, 255" },
+  { p: "255, 230, 0", s: "112, 0, 255" },
+  { p: "0, 255, 204", s: "255, 51, 0" }
 ];
 
 let colorIdx = 0;
@@ -28,28 +28,27 @@ const nameInput = document.getElementById("guest-name");
 const rsvpForm = document.getElementById("rsvp-form");
 const rsvpSuccess = document.getElementById("rsvp-success");
 
-// Haetaan animoitavat DOM-elementit kerran muistiin (ei hakuja silmukassa)
 const inviteCard = document.getElementById("invite-card");
 const wormSpinner = document.getElementById("worm-spinner");
 const sideSigns = document.querySelectorAll(".side-sign");
 const topLights = document.querySelectorAll(".blinder-top .blinder-light");
 const bottomLights = document.querySelectorAll(".blinder-bottom .blinder-light");
 
-const spotTL = document.querySelector(".spot-tl");
-const spotTR = document.querySelector(".spot-tr");
-const spotBL = document.querySelector(".spot-bl");
-const spotBR = document.querySelector(".spot-br");
-const spotTC = document.querySelector(".spot-tc");
-const spotBC = document.querySelector(".spot-bc");
-const spotML = document.querySelector(".spot-ml");
-const spotMR = document.querySelector(".spot-mr");
-const allColorSpots = [spotTL, spotTR, spotBL, spotBR, spotTC, spotBC, spotML, spotMR];
+// Canvas-alustus (Matala sisäinen resoluutio = ilmainen pehmeä sumennus & 120 FPS mobiilissa)
+const canvas = document.getElementById("light-canvas");
+const ctx = canvas.getContext("2d", { alpha: false });
+let cw = 240;
+let ch = 420;
 
-const beam1 = document.querySelector(".beam-1");
-const beam2 = document.querySelector(".beam-2");
-const beam3 = document.querySelector(".beam-3");
-const beam4 = document.querySelector(".beam-4");
-const beam5 = document.querySelector(".beam-5");
+function resizeCanvas() {
+  const aspect = window.innerWidth / window.innerHeight;
+  ch = 360;
+  cw = Math.round(ch * aspect);
+  canvas.width = cw;
+  canvas.height = ch;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 
 // 1. VIP-nimen alustus
 window.addEventListener("DOMContentLoaded", () => {
@@ -66,7 +65,6 @@ window.addEventListener("DOMContentLoaded", () => {
 async function initAudioAndVisuals() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    // "playback"-vihje antaa Androidille suuren äänipuskurin, jolloin musiikki ei rätise
     audioCtx = new AudioContextClass({ latencyHint: "playback" });
 
     const source = audioCtx.createMediaElementSource(audio);
@@ -112,7 +110,25 @@ function getAverageRange(arr, startIdx, endIdx) {
   return sum / (endIdx - startIdx + 1);
 }
 
-// "ALL OF THE LIGHTS" -aikaleimat
+// Apufunktio pehmeän valokeilan piirtämiseen Canvasille
+function drawBeam(x, y, angleDeg, spreadDeg, rgb, alpha, length) {
+  if (alpha <= 0.01) return;
+  const rad = (angleDeg * Math.PI) / 180;
+  const halfSpread = ((spreadDeg / 2) * Math.PI) / 180;
+
+  const grad = ctx.createRadialGradient(x, y, 2, x, y, length);
+  grad.addColorStop(0, `rgba(${rgb}, ${alpha})`);
+  grad.addColorStop(0.6, `rgba(${rgb}, ${alpha * 0.45})`);
+  grad.addColorStop(1, `rgba(${rgb}, 0)`);
+
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.arc(x, y, length, rad - halfSpread, rad + halfSpread);
+  ctx.closePath();
+  ctx.fill();
+}
+
 const lightIntervals = [
   [4.6, 5.9],
   [17.5, 18.8],
@@ -124,56 +140,44 @@ const lightIntervals = [
   [119.0, 120.3]
 ];
 
-let prevQuietMode = false;
 let prevIlluminated = false;
+let prevBlinderState = "";
 
-// 3. Kevyt ja nopea renderöintisilmukka (Suorat GPU-kutsut)
+// 3. Huippunopea renderöintisilmukka
 function renderLoop() {
   analyser.getByteFrequencyData(dataArray);
 
-  // Koska fftSize = 256, indeksit on skaalattu puoleen (vastaa täsmälleen aiempia taajuuksia)
   const subBass = getAverageRange(dataArray, 1, 4) / 255;
   const mids    = getAverageRange(dataArray, 5, 15) / 255;
   const treble  = getAverageRange(dataArray, 20, 48) / 255;
 
-  const root = document.documentElement;
   const now = performance.now();
   const currentTime = audio.currentTime;
 
-  // --- RAUHALLISEN KOHDAN TUNNISTUS ---
+  // Tyhjennetään Canvas tummalla klubitaustalla
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#050508";
+  ctx.fillRect(0, 0, cw, ch);
+
+  // Valokeilat sekoittuvat kirkkaasti keskenään ("screen"/"lighter")
+  ctx.globalCompositeOperation = "lighter";
+
   const isActualBreakdown = (currentTime < 2.0) || 
                             (currentTime >= 16.5 && currentTime <= 17.5) || 
                             (currentTime >= 57.0 && currentTime <= 68.5);
   const totalVolume = subBass * 0.5 + mids * 0.3 + treble * 0.2;
   const isQuietMoment = isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0);
 
-  if (isQuietMoment !== prevQuietMode) {
-    document.body.classList.toggle("quiet-mode", isQuietMoment);
-    prevQuietMode = isQuietMoment;
-  }
-
-  // Aika etenee musiikin energian mukaan
   const speedMultiplier = 1 + subBass * 1.8 + treble * 0.8;
   timeScale += 0.012 * speedMultiplier;
 
-  if (!isQuietMoment) {
-    // Päivitetään vain värilliset spotit kun ne ovat näkyvissä
-    const t = timeScale;
-    spotTL.style.transform = `rotate(${(Math.sin(t * 0.72) * 85 + Math.cos(t * 0.32) * 55).toFixed(1)}deg)`;
-    spotTR.style.transform = `rotate(${(Math.cos(t * 0.65) * 90 - Math.sin(t * 0.28) * 50).toFixed(1)}deg)`;
-    spotBL.style.transform = `rotate(${(-Math.sin(t * 0.68) * 85 + Math.cos(t * 0.42) * 50).toFixed(1)}deg)`;
-    spotBR.style.transform = `rotate(${(-Math.cos(t * 0.78) * 80 + Math.sin(t * 0.36) * 60).toFixed(1)}deg)`;
-    spotTC.style.transform = `rotate(${(Math.sin(t * 0.92 + 1.2) * 85 + Math.cos(t * 0.42) * 50).toFixed(1)}deg)`;
-    spotBC.style.transform = `rotate(${(-Math.cos(t * 0.85 + 0.8) * 85 - Math.sin(t * 0.38) * 50).toFixed(1)}deg)`;
-    spotML.style.transform = `rotate(${(Math.cos(t * 0.68 + 2.1) * 80 + Math.sin(t * 0.48) * 55).toFixed(1)}deg)`;
-    spotMR.style.transform = `rotate(${(-Math.sin(t * 0.88 + 1.7) * 85 + Math.cos(t * 0.35) * 50).toFixed(1)}deg)`;
+  const maxLen = Math.hypot(cw, ch) * 1.15;
 
-    // Värien vaihto (vain silloin kun väri oikeasti vaihtuu, max ~5 kertaa sekunnissa)
+  if (!isQuietMoment) {
+    // Värien vaihto ilman DOM-tyylien uudelleenlaskentaa!
     const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
     if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
       colorIdx = (colorIdx + 1) % PALETTE.length;
-      root.style.setProperty("--active-color", PALETTE[colorIdx].primary);
-      root.style.setProperty("--secondary-color", PALETTE[colorIdx].secondary);
       lastBeat = now;
     }
 
@@ -193,19 +197,31 @@ function renderLoop() {
     }
 
     const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
-    const finalSpotOpacity = ((beamIntensity + subtleSparkle) * strobeGate).toFixed(2);
+    const alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
 
-    for (let i = 0; i < allColorSpots.length; i++) {
-      allColorSpots[i].style.opacity = finalSpotOpacity;
-    }
+    const colP = PALETTE[colorIdx].p;
+    const colS = PALETTE[colorIdx].s;
+    const t = timeScale;
+
+    // 8 kpl värillisiä klubispotteja laajoilla Lissajous-radoilla
+    drawBeam(0, 0,       45 + Math.sin(t * 0.72) * 55 + Math.cos(t * 0.32) * 35, 36, colP, alpha, maxLen);
+    drawBeam(cw, 0,     135 + Math.cos(t * 0.65) * 55 - Math.sin(t * 0.28) * 35, 36, colS, alpha, maxLen);
+    drawBeam(0, ch,     -45 - Math.sin(t * 0.68) * 55 + Math.cos(t * 0.42) * 35, 38, colS, alpha, maxLen);
+    drawBeam(cw, ch,   -135 - Math.cos(t * 0.78) * 55 + Math.sin(t * 0.36) * 35, 38, colP, alpha, maxLen);
+
+    drawBeam(cw * 0.5, 0,  90 + Math.sin(t * 0.92 + 1.2) * 65, 30, colS, alpha * 0.85, maxLen);
+    drawBeam(cw * 0.5, ch, -90 - Math.cos(t * 0.85 + 0.8) * 65, 30, colP, alpha * 0.85, maxLen);
+    drawBeam(0, ch * 0.5,   0 + Math.cos(t * 0.68 + 2.1) * 60, 32, colP, alpha * 0.8, maxLen);
+    drawBeam(cw, ch * 0.5, 180 - Math.sin(t * 0.88 + 1.7) * 60, 32, colS, alpha * 0.8, maxLen);
   } else {
-    // Päivitetään vain valkoiset hakuspotit kun ollaan rauhallisessa kohdassa
+    // 5 kpl valkoisia hakuspotteja rauhallisissa kohdissa
     const wT = now * 0.0006;
-    beam1.style.transform = `rotate(${(Math.sin(wT * 0.8) * 65 + (now * 0.008) % 360).toFixed(1)}deg)`;
-    beam2.style.transform = `rotate(${(-Math.cos(wT * 0.7) * 70 - (now * 0.007) % 360).toFixed(1)}deg)`;
-    beam3.style.transform = `rotate(${(Math.sin(wT * 1.1 + 1.5) * 55 + Math.cos(wT * 0.5) * 40).toFixed(1)}deg)`;
-    beam4.style.transform = `rotate(${(-Math.sin(wT * 0.9 + 2.0) * 60 - Math.sin(wT * 0.4) * 40).toFixed(1)}deg)`;
-    beam5.style.transform = `rotate(${(Math.cos(wT * 0.65) * 75).toFixed(1)}deg)`;
+    const whiteCol = "255, 255, 255";
+    drawBeam(0, 0,         45 + Math.sin(wT * 0.8) * 45, 18, whiteCol, 0.75, maxLen);
+    drawBeam(cw, ch,     -135 - Math.cos(wT * 0.7) * 45, 18, whiteCol, 0.70, maxLen);
+    drawBeam(cw * 0.8, 0,  95 + Math.sin(wT * 1.1 + 1.5) * 45, 20, whiteCol, 0.65, maxLen);
+    drawBeam(cw * 0.2, ch, -85 - Math.sin(wT * 0.9 + 2.0) * 45, 18, whiteCol, 0.70, maxLen);
+    drawBeam(cw * 0.4, 0,  85 + Math.cos(wT * 0.65) * 50, 22, whiteCol, 0.60, maxLen);
   }
 
   // --- 1. AJASTUS: 2.5 SEKUNTIA ENNEN "ALL OF THE LIGHTS" ---
@@ -232,29 +248,36 @@ function renderLoop() {
     prevIlluminated = isSingingLights;
   }
 
-  // --- 2. LAVAVALOJEN SYTYTTÄMINEN ---
-  if (buildupActive || isSingingLights) {
-    topLights.forEach((light, i) => {
-      light.classList.remove("solid-on");
-      light.classList.toggle("active", i <= activeStep);
-    });
-    bottomLights.forEach((light, i) => {
-      light.classList.remove("solid-on");
-      light.classList.toggle("active", (5 - i) <= activeStep);
-    });
-  } else {
-    const isBassHit = !isQuietMoment && (subBass > 0.80);
-    topLights.forEach(light => {
-      light.classList.remove("active");
-      light.classList.toggle("solid-on", isBassHit);
-    });
-    bottomLights.forEach(light => {
-      light.classList.remove("active");
-      light.classList.toggle("solid-on", isBassHit);
-    });
+  // --- 2. LAVAVALOT (Päivitetään DOM vain kun tila oikeasti muuttuu!) ---
+  const isBassHit = !isQuietMoment && (subBass > 0.80);
+  const currentBlinderState = (buildupActive || isSingingLights) 
+    ? `step-${activeStep}` 
+    : (isBassHit ? "bass-on" : "off");
+
+  if (currentBlinderState !== prevBlinderState) {
+    if (buildupActive || isSingingLights) {
+      topLights.forEach((light, i) => {
+        light.classList.remove("solid-on");
+        light.classList.toggle("active", i <= activeStep);
+      });
+      bottomLights.forEach((light, i) => {
+        light.classList.remove("solid-on");
+        light.classList.toggle("active", (5 - i) <= activeStep);
+      });
+    } else {
+      topLights.forEach(light => {
+        light.classList.remove("active");
+        light.classList.toggle("solid-on", isBassHit);
+      });
+      bottomLights.forEach(light => {
+        light.classList.remove("active");
+        light.classList.toggle("solid-on", isBassHit);
+      });
+    }
+    prevBlinderState = currentBlinderState;
   }
 
-  // --- 3. KORTIN SYKKIMINEN & VALOMATOT (SUORA GPU-TRANSFORMAATIO) ---
+  // --- 3. KORTIN SYKKIMINEN & VALOMATOT ---
   let wormDir = 1;
   for (const [start] of lightIntervals) {
     if (currentTime >= start) wormDir *= -1;
@@ -269,7 +292,7 @@ function renderLoop() {
   wormAngle = (wormAngle + wormDir * wormSpeed + 360000) % 360;
   wormSpinner.style.transform = `rotate(${wormAngle.toFixed(1)}deg)`;
 
-  const scaleValue = 1 + Math.pow(subBass, 1.4) * 0.09;
+  const scaleValue = 1 + Math.pow(subBass, 1.4) * 0.08;
   inviteCard.style.transform = `scale(${scaleValue.toFixed(3)})`;
 
   requestAnimationFrame(renderLoop);
