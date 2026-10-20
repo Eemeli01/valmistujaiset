@@ -1,13 +1,8 @@
-const RSVP_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
-
-// Neon-klubipaletti (RGB-muodossa nopeaan Canvas-piirtoon)
-const PALETTE = [
-  { p: "0, 240, 255", s: "255, 0, 127" },
-  { p: "112, 0, 255", s: "0, 255, 102" },
-  { p: "255, 0, 85",  s: "0, 240, 255" },
-  { p: "255, 230, 0", s: "112, 0, 255" },
-  { p: "0, 255, 204", s: "255, 51, 0" }
-];
+// Aseta tähän GitHubin Personal Access Token (PAT), jotta tiedosto voidaan tallentaa suoraan repoosi
+const GITHUB_TOKEN = "VAIHDA_TÄHÄN_OMA_GITHUB_TOKENISI";
+const GITHUB_OWNER = "Eemeli01";
+const GITHUB_REPO = "valmistujaiset";
+const GITHUB_PATH = "responses.json";
 
 let colorIdx = 0;
 let lastBeat = 0;
@@ -27,6 +22,7 @@ const vipGreeting = document.getElementById("vip-greeting");
 const nameInput = document.getElementById("guest-name");
 const rsvpForm = document.getElementById("rsvp-form");
 const rsvpSuccess = document.getElementById("rsvp-success");
+const deadlineRow = document.getElementById("deadline-row");
 
 const inviteCard = document.getElementById("invite-card");
 const wormSpinner = document.getElementById("worm-spinner");
@@ -34,7 +30,6 @@ const sideSigns = document.querySelectorAll(".side-sign");
 const topLights = document.querySelectorAll(".blinder-top .blinder-light");
 const bottomLights = document.querySelectorAll(".blinder-bottom .blinder-light");
 
-// Canvas-alustus (Matala sisäinen resoluutio = ilmainen pehmeä sumennus & 120 FPS mobiilissa)
 const canvas = document.getElementById("light-canvas");
 const ctx = canvas.getContext("2d", { alpha: false });
 let cw = 240;
@@ -110,7 +105,88 @@ function getAverageRange(arr, startIdx, endIdx) {
   return sum / (endIdx - startIdx + 1);
 }
 
-// Apufunktio pehmeän valokeilan piirtämiseen Canvasille
+// Kalenteritiedoston (.ics) luonti ja lataus
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "add-to-calendar") {
+    e.preventDefault();
+    const icsData = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      "SUMMARY:Eemelin valmistujaiset",
+      "LOCATION:Otakaari 15, Espoo",
+      "DESCRIPTION:Eemelin DI-valmistujaisbileet Otaniemessä.",
+      "DTSTART:20270109T180000",
+      "DTEND:20270110T000000",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "eemelin-valmistujaiset.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+});
+
+// Funktio vastausten tallentamiseksi suoraan GitHubiin (responses.json)
+async function saveResponseToGitHub(payload) {
+  if (GITHUB_TOKEN.includes("VAIHDA")) return; // Ohitetaan jos tokenia ei ole asetettu
+
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+  try {
+    let sha = null;
+    let existingData = [];
+
+    const getRes = await fetch(url, {
+      headers: { Authorization: `token ${GITHUB_TOKEN}` }
+    });
+
+    if (getRes.ok) {
+      const fileData = await getRes.json();
+      sha = fileData.sha;
+      try {
+        existingData = JSON.parse(atob(fileData.content));
+      } catch (e) {
+        existingData = [];
+      }
+    }
+
+    existingData.push(payload);
+
+    const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(existingData, null, 2))));
+
+    await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `RSVP response from ${payload.name}`,
+        content: contentEncoded,
+        sha: sha
+      })
+    });
+  } catch (err) {
+    console.error("GitHub save error:", err);
+  }
+}
+
+// Neon-klubipaletti
+const PALETTE = [
+  { p: "0, 240, 255", s: "255, 0, 127" },
+  { p: "112, 0, 255", s: "0, 255, 102" },
+  { p: "255, 0, 85",  s: "0, 240, 255" },
+  { p: "255, 230, 0", s: "112, 0, 255" },
+  { p: "0, 255, 204", s: "255, 51, 0" }
+];
+
 function drawBeam(x, y, angleDeg, spreadDeg, rgb, alpha, length) {
   if (alpha <= 0.01) return;
   const rad = (angleDeg * Math.PI) / 180;
@@ -143,7 +219,6 @@ const lightIntervals = [
 let prevIlluminated = false;
 let prevBlinderState = "";
 
-// 3. Huippunopea renderöintisilmukka
 function renderLoop() {
   analyser.getByteFrequencyData(dataArray);
 
@@ -154,12 +229,10 @@ function renderLoop() {
   const now = performance.now();
   const currentTime = audio.currentTime;
 
-  // Tyhjennetään Canvas tummalla klubitaustalla
   ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#050508";
   ctx.fillRect(0, 0, cw, ch);
 
-  // Valokeilat sekoittuvat kirkkaasti keskenään ("screen"/"lighter")
   ctx.globalCompositeOperation = "lighter";
 
   const isActualBreakdown = (currentTime < 2.0) || 
@@ -173,35 +246,35 @@ function renderLoop() {
 
   const maxLen = Math.hypot(cw, ch) * 0.58;
 
-if (!isQuietMoment) {
-    // Rauhallisempi värien vaihto (vähintään 420ms väli, vain selkeissä iskuissa)
-    if ((subBass > 0.76 || mids > 0.74) && now - lastBeat > 420) {
+  if (!isQuietMoment) {
+    const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
+    if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
       colorIdx = (colorIdx + 1) % PALETTE.length;
       lastBeat = now;
     }
 
-    // Pehmeä kirkkauden seuranta ilman satunnaista sähinää
-    const targetIntensity = Math.min(0.85, 0.38 + subBass * 0.45 + mids * 0.2);
-    beamIntensity += (targetIntensity - beamIntensity) * 0.15;
-
-    // Hallittu, rauhallisempi strobo vain selkeässä build-upin loppuhuipennuksessa ja kovimmassa dropissa
-    let strobeGate = 1.0;
-    if (currentTime >= 75.5 && currentTime <= 81.4) {
-      const p = (currentTime - 75.5) / (81.4 - 75.5);
-      const cycleMs = 95 - p * 45; // Hillitympi taajuus
-      strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.25;
-    } else if (subBass > 0.88 && mids > 0.78) {
-      // Ei täyttä mustaa leikkausta, vaan miellyttävä sykähdys
-      strobeGate = (Math.floor(now / 45) % 2 === 0) ? 1.0 : 0.45;
+    if (beatEnergy > 0.70) {
+      beamIntensity = 0.85 + Math.random() * 0.15;
+    } else {
+      beamIntensity = Math.max(0.40, beamIntensity * 0.92);
     }
 
-    const alpha = Math.min(0.9, beamIntensity * strobeGate);
+    let strobeGate = 1.0;
+    if (currentTime >= 73.5 && currentTime <= 81.4) {
+      const p = (currentTime - 73.5) / (81.4 - 73.5);
+      const cycleMs = 85 - p * 52;
+      strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.0;
+    } else if (subBass > 0.84 && mids > 0.70) {
+      strobeGate = (Math.floor(now / 38) % 2 === 0) ? 1.0 : 0.15;
+    }
+
+    const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
+    const alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
 
     const colP = PALETTE[colorIdx].p;
     const colS = PALETTE[colorIdx].s;
     const t = timeScale;
 
-    // 8 kpl pehmeitä klubispotteja
     drawBeam(0, 0,       45 + Math.sin(t * 0.72) * 55 + Math.cos(t * 0.32) * 35, 42, colP, alpha, maxLen);
     drawBeam(cw, 0,     135 + Math.cos(t * 0.65) * 55 - Math.sin(t * 0.28) * 35, 42, colS, alpha, maxLen);
     drawBeam(0, ch,     -45 - Math.sin(t * 0.68) * 55 + Math.cos(t * 0.42) * 35, 44, colS, alpha, maxLen);
@@ -212,7 +285,6 @@ if (!isQuietMoment) {
     drawBeam(0, ch * 0.5,   0 + Math.cos(t * 0.68 + 2.1) * 60, 38, colP, alpha * 0.75, maxLen);
     drawBeam(cw, ch * 0.5, 180 - Math.sin(t * 0.88 + 1.7) * 60, 38, colS, alpha * 0.75, maxLen);
   } else {
-    // 5 kpl valkoisia hakuspotteja rauhallisissa kohdissa
     const wT = now * 0.0006;
     const whiteCol = "255, 255, 255";
     drawBeam(0, 0,         45 + Math.sin(wT * 0.8) * 45, 18, whiteCol, 0.75, maxLen);
@@ -222,7 +294,6 @@ if (!isQuietMoment) {
     drawBeam(cw * 0.4, 0,  85 + Math.cos(wT * 0.65) * 50, 22, whiteCol, 0.60, maxLen);
   }
 
-  // --- 1. AJASTUS: 2.5 SEKUNTIA ENNEN "ALL OF THE LIGHTS" ---
   let isSingingLights = false;
   let buildupActive = false;
   let activeStep = -1;
@@ -246,7 +317,6 @@ if (!isQuietMoment) {
     prevIlluminated = isSingingLights;
   }
 
-  // --- 2. LAVAVALOT (Päivitetään DOM vain kun tila oikeasti muuttuu!) ---
   const isBassHit = !isQuietMoment && (subBass > 0.80);
   const currentBlinderState = (buildupActive || isSingingLights) 
     ? `step-${activeStep}` 
@@ -275,7 +345,6 @@ if (!isQuietMoment) {
     prevBlinderState = currentBlinderState;
   }
 
-  // --- 3. KORTIN SYKKIMINEN & VALOMATOT ---
   let wormDir = 1;
   for (const [start] of lightIntervals) {
     if (currentTime >= start) wormDir *= -1;
@@ -296,35 +365,6 @@ if (!isQuietMoment) {
   requestAnimationFrame(renderLoop);
 }
 
-// Kalenteritiedoston (.ics) luonti ja lataus
-document.addEventListener("click", (e) => {
-  if (e.target && e.target.id === "add-to-calendar") {
-    e.preventDefault();
-    const icsData = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "BEGIN:VEVENT",
-      "SUMMARY:Eemelin valmistujaiset",
-      "LOCATION:Otakaari 15, Espoo",
-      "DESCRIPTION:Eemelin DI-valmistujaisbileet Otaniemessä.",
-      "DTSTART:20270109T180000",
-      "DTEND:20270110T000000",
-      "END:VEVENT",
-      "END:VCALENDAR"
-    ].join("\r\n");
-
-    const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "eemelin-valmistujaiset.ics";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }
-});
-
 // 4. RSVP-lomakkeen käsittely
 rsvpForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -339,8 +379,12 @@ rsvpForm.addEventListener("submit", async (e) => {
     name: formData.get("name"),
     avec: formData.get("avec") || "",
     attendance: attendance,
-    message: formData.get("message") || ""
+    message: formData.get("message") || "",
+    timestamp: new Date().toISOString()
   };
+
+  // Tallennetaan tiedosto GitHubiin taustalla
+  saveResponseToGitHub(payload);
 
   if (RSVP_ENDPOINT.includes("YOUR_FORM_ID")) {
     setTimeout(() => {
@@ -350,7 +394,7 @@ rsvpForm.addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(RSVP_ENDPOINT, {
+    await fetch(RSVP_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -358,18 +402,9 @@ rsvpForm.addEventListener("submit", async (e) => {
       },
       body: JSON.stringify(payload)
     });
-
-    if (res.ok) {
-      showSuccess(attendance);
-    } else {
-      alert("Ilmoittautumisen lähetys epäonnistui. Yritä uudelleen!");
-      submitBtn.disabled = false;
-      submitBtn.textContent = "LÄHETÄ VASTAUS";
-    }
+    showSuccess(attendance);
   } catch {
-    alert("Yhteysvirhe. Tarkista verkkoyhteys!");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "LÄHETÄ VASTAUS";
+    showSuccess(attendance); // Näytetään silti onnistumisviesti käyttäjälle
   }
 });
 
@@ -382,12 +417,30 @@ function showSuccess(attendance) {
   const checkIcon = rsvpSuccess.querySelector(".check-icon");
 
   if (attendance === "declined") {
+    // Jos käyttäjä ei pääse, kortti näyttää vain kättely-emojin ja halutun tekstin ilman ylimääräisiä tervetuloja
     checkIcon.textContent = "🤝";
     successTitle.textContent = "Valinta tallennettu!";
     successText.textContent = "Pysytään yhteyksissä!";
+    
+    // Piilotetaan kortin yläosan header ja event-details kokonaan, jotta näkymä on siisti
+    const cardHeader = inviteCard.querySelector(".card-header");
+    const eventDetails = inviteCard.querySelector(".event-details");
+    if (cardHeader) cardHeader.style.display = "none";
+    if (eventDetails) eventDetails.style.display = "none";
   } else {
+    // Jos pääsee paikalle: deadline korvataan kalenterilinkillä
     checkIcon.textContent = "✨";
     successTitle.textContent = "Olet listalla!";
     successText.textContent = "Vastauksesi on tallennettu. Nähdään Otaniemessä 9. tammikuuta!";
+
+    if (deadlineRow) {
+      deadlineRow.innerHTML = `
+        <span class="icon">🗓️</span>
+        <div>
+          <strong>Kalenteri</strong>
+          <p><a href="#" id="add-to-calendar" style="color: var(--active-color); text-decoration: underline; cursor: pointer;">Lisää kalenteriin</a></p>
+        </div>
+      `;
+    }
   }
 }
