@@ -1,5 +1,5 @@
 // Aseta tähän GitHubin Personal Access Token (PAT), jotta tiedosto voidaan tallentaa suoraan repoosi
-// const GITHUB_TOKEN = "";;
+// const GITHUB_TOKEN = "";
 const GITHUB_OWNER = "Eemeli01";
 const GITHUB_REPO = "valmistujaiset";
 const GITHUB_PATH = "responses.json";
@@ -10,6 +10,7 @@ let lastBeat = 0;
 let beamIntensity = 0.5;
 let wormAngle = 0;
 let timeScale = 0;
+let textHue = 190;
 
 let audioCtx = null;
 let analyser = null;
@@ -30,6 +31,11 @@ const wormSpinner = document.getElementById("worm-spinner");
 const sideSigns = document.querySelectorAll(".side-sign");
 const topLights = document.querySelectorAll(".blinder-top .blinder-light");
 const bottomLights = document.querySelectorAll(".blinder-bottom .blinder-light");
+
+// Pehmeästi väriä vaihtavat tekstielementit ja nappi
+const badgeEl = document.querySelector(".badge");
+const partyTitleEl = document.querySelector(".party-title");
+const submitBtnEl = document.getElementById("submit-btn");
 
 const canvas = document.getElementById("light-canvas");
 const ctx = canvas.getContext("2d", { alpha: false });
@@ -135,7 +141,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-
 // Neon-klubipaletti
 const PALETTE = [
   { p: "0, 240, 255", s: "255, 0, 127" },
@@ -161,6 +166,25 @@ function drawBeam(x, y, angleDeg, spreadDeg, rgb, alpha, length) {
   ctx.arc(x, y, length, rad - halfSpread, rad + halfSpread);
   ctx.closePath();
   ctx.fill();
+}
+
+// Piirtää valkoisen hohtavan pallon (rx === ry) tai soikion (rx !== ry)
+function drawWhiteOrb(x, y, rx, ry, rotRad, alpha) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotRad);
+  ctx.scale(rx, ry);
+
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+  grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+  grad.addColorStop(0.55, `rgba(245, 250, 255, ${alpha * 0.75})`);
+  grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 const lightIntervals = [
@@ -193,41 +217,83 @@ function renderLoop() {
 
   ctx.globalCompositeOperation = "lighter";
 
+  // Erikoisjaksot
+  const isSteadyClubSection = (currentTime >= 31.4 && currentTime <= 42.4);
+  const isWhiteOrbsSection  = (currentTime >= 43.7 && currentTime <= 55.2);
+
   const isActualBreakdown = (currentTime < 2.0) || 
                             (currentTime >= 16.5 && currentTime <= 17.5) || 
                             (currentTime >= 57.0 && currentTime <= 68.5);
   const totalVolume = subBass * 0.5 + mids * 0.3 + treble * 0.2;
-  const isQuietMoment = isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0);
+  const isQuietMoment = !isSteadyClubSection && (isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0));
 
   const speedMultiplier = 1 + subBass * 1.8 + treble * 0.8;
   timeScale += 0.012 * speedMultiplier;
 
+  // --- PEHMEÄ, MUSIIKIN MUKAAN SOLJUVA VÄRILIUKU TEKSTEILLE JA NAPILLE ---
+  const musicColorDrive = subBass * 2.2 + mids * 1.6 + treble * 0.8;
+  textHue = (textHue + 0.35 + musicColorDrive * 2.4) % 360;
+  const h1 = textHue.toFixed(1);
+  const h2 = ((textHue + 75) % 360).toFixed(1);
+  const glowAlpha = (0.35 + subBass * 0.45).toFixed(2);
+
+  if (badgeEl) {
+    badgeEl.style.color = `hsl(${h1}, 100%, 62%)`;
+    badgeEl.style.backgroundColor = `hsla(${h1}, 100%, 50%, 0.16)`;
+    badgeEl.style.textShadow = `0 0 8px hsla(${h1}, 100%, 60%, ${glowAlpha})`;
+  }
+  if (partyTitleEl) {
+    partyTitleEl.style.backgroundImage = `linear-gradient(135deg, #ffffff 22%, hsl(${h1}, 100%, 62%) 62%, hsl(${h2}, 100%, 60%) 100%)`;
+  }
+  if (submitBtnEl) {
+    submitBtnEl.style.backgroundImage = `linear-gradient(135deg, hsl(${h1}, 100%, 55%), hsl(${h2}, 100%, 55%))`;
+    submitBtnEl.style.boxShadow = `0 0 14px hsla(${h1}, 100%, 55%, ${glowAlpha})`;
+  }
+
   const maxLen = Math.hypot(cw, ch) * 0.58;
 
-  if (!isQuietMoment) {
-    const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
-    if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
-      colorIdx = (colorIdx + 1) % PALETTE.length;
-      lastBeat = now;
-    }
+  if (isWhiteOrbsSection) {
+    // 43.7 - 55.2 s: Kaikki nykyiset valot pois -> rauhalliset valkoiset hohtavat soikiot ja pallot
+    const oT = now * 0.00075;
+    drawWhiteOrb(cw * (0.24 + 0.18 * Math.sin(oT * 1.1)), ch * (0.22 + 0.14 * Math.cos(oT * 0.9)), 46, 22, oT * 0.6, 0.95);
+    drawWhiteOrb(cw * (0.76 + 0.16 * Math.cos(oT * 0.85)), ch * (0.28 + 0.15 * Math.sin(oT * 1.05)), 30, 30, 0, 0.90);
+    drawWhiteOrb(cw * (0.22 + 0.15 * Math.cos(oT * 0.95 + 1.2)), ch * (0.74 + 0.14 * Math.sin(oT * 0.8 + 0.5)), 32, 32, 0, 0.90);
+    drawWhiteOrb(cw * (0.78 + 0.15 * Math.sin(oT * 0.75 + 2.0)), ch * (0.72 + 0.16 * Math.cos(oT * 1.15 + 1.0)), 50, 24, -oT * 0.5, 0.95);
+    drawWhiteOrb(cw * (0.50 + 0.28 * Math.sin(oT * 0.65)), ch * (0.16 + 0.10 * Math.sin(oT * 1.3)), 42, 20, Math.sin(oT * 0.7) * 0.8, 0.88);
+    drawWhiteOrb(cw * (0.50 + 0.26 * Math.cos(oT * 0.7)), ch * (0.84 + 0.10 * Math.cos(oT * 1.2)), 28, 28, 0, 0.88);
+    drawWhiteOrb(cw * (0.50 + 0.30 * Math.sin(oT * 0.55 + 2.5)), ch * (0.50 + 0.24 * Math.cos(oT * 0.65 + 1.4)), 48, 22, oT * 0.4, 0.85);
+  } else if (!isQuietMoment) {
+    let alpha;
 
-    if (beatEnergy > 0.70) {
-      beamIntensity = 0.85 + Math.random() * 0.15;
+    if (isSteadyClubSection) {
+      // 31.4 - 42.4 s: Välkkyminen ja värin vaihto pois, liike pysyy ennallaan
+      beamIntensity += (0.72 - beamIntensity) * 0.1;
+      alpha = beamIntensity * 0.85;
     } else {
-      beamIntensity = Math.max(0.40, beamIntensity * 0.92);
-    }
+      const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
+      if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
+        colorIdx = (colorIdx + 1) % PALETTE.length;
+        lastBeat = now;
+      }
 
-    let strobeGate = 1.0;
-    if (currentTime >= 73.5 && currentTime <= 81.4) {
-      const p = (currentTime - 73.5) / (81.4 - 73.5);
-      const cycleMs = 85 - p * 52;
-      strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.0;
-    } else if (subBass > 0.84 && mids > 0.70) {
-      strobeGate = (Math.floor(now / 38) % 2 === 0) ? 1.0 : 0.15;
-    }
+      if (beatEnergy > 0.70) {
+        beamIntensity = 0.85 + Math.random() * 0.15;
+      } else {
+        beamIntensity = Math.max(0.40, beamIntensity * 0.92);
+      }
 
-    const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
-    const alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
+      let strobeGate = 1.0;
+      if (currentTime >= 73.5 && currentTime <= 81.4) {
+        const p = (currentTime - 73.5) / (81.4 - 73.5);
+        const cycleMs = 85 - p * 52;
+        strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.0;
+      } else if (subBass > 0.84 && mids > 0.70) {
+        strobeGate = (Math.floor(now / 38) % 2 === 0) ? 1.0 : 0.15;
+      }
+
+      const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
+      alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
+    }
 
     const colP = PALETTE[colorIdx].p;
     const colS = PALETTE[colorIdx].s;
@@ -275,13 +341,14 @@ function renderLoop() {
     prevIlluminated = isSingingLights;
   }
 
-  const isBassHit = !isQuietMoment && (subBass > 0.80);
-  const currentBlinderState = (buildupActive || isSingingLights) 
-    ? `step-${activeStep}` 
-    : (isBassHit ? "bass-on" : "off");
+  // Lavavalot pidetään myös poissa 43.7 - 55.2 s erikoisjakson ajan
+  const isBassHit = !isQuietMoment && !isSteadyClubSection && !isWhiteOrbsSection && (subBass > 0.80);
+  const currentBlinderState = isWhiteOrbsSection
+    ? "off"
+    : ((buildupActive || isSingingLights) ? `step-${activeStep}` : (isBassHit ? "bass-on" : "off"));
 
   if (currentBlinderState !== prevBlinderState) {
-    if (buildupActive || isSingingLights) {
+    if (!isWhiteOrbsSection && (buildupActive || isSingingLights)) {
       topLights.forEach((light, i) => {
         light.classList.remove("solid-on");
         light.classList.toggle("active", i <= activeStep);
@@ -309,7 +376,7 @@ function renderLoop() {
   }
 
   let wormSpeed = 0.25;
-  if (!isQuietMoment) {
+  if (!isQuietMoment && !isWhiteOrbsSection) {
     const energy = subBass * 2.4 + mids * 1.5 + treble * 0.8;
     wormSpeed = 0.55 + energy * 2.2;
   }
@@ -341,7 +408,6 @@ rsvpForm.addEventListener("submit", async (e) => {
     timestamp: new Date().toISOString()
   };
 
-  // Jos Formspree ID on vielä asettamatta, näytetään onnistuminen suoraan viiveellä testinä
   if (RSVP_ENDPOINT.includes("YOUR_FORM_ID")) {
     setTimeout(() => {
       showSuccess(attendance);
@@ -367,7 +433,6 @@ rsvpForm.addEventListener("submit", async (e) => {
       submitBtn.textContent = "LÄHETÄ VASTAUS";
     }
   } catch (err) {
-    // Jos yhteys tökkii, näytetään silti käyttäjälle onnistumisviesti, ettei nappi jää jumiin
     showSuccess(attendance);
   }
 });
