@@ -1,6 +1,6 @@
 :root {
   --bg-color: #050508;
-  --card-bg: #101018;
+  --card-bg: rgba(16, 16, 24, 0.78); /* Hieman läpikuultava (voit säätää 0.75–0.85 maun mukaan) */
   --active-color: #00f0ff;
   --secondary-color: #ff007f;
 }
@@ -220,7 +220,7 @@ body {
   padding: 14px 14px; /* 20 % matalampi sisätila */
   will-change: transform;
   transform: translateZ(0);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 18px rgba(0, 240, 255, 0.35);
   text-align: left;
 }
 
@@ -228,18 +228,16 @@ body {
   position: absolute;
   inset: -5px;
   border-radius: 23px;
+  padding: 5px;
+  box-sizing: border-box;
   overflow: hidden;
   z-index: -1;
   pointer-events: none;
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.35);
-}
-
-.worm-border::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  background: var(--card-bg);
-  border-radius: 18px;
+  /* Leikkaa keskustan kokonaan pois, jolloin valomadon lähde ei ole kortin alla lainkaan */
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
 }
 
 .worm-spinner {
