@@ -19,7 +19,7 @@ let dataArray = null;
 const audio = document.getElementById("club-audio");
 const overlay = document.getElementById("overlay");
 const enterBtn = document.getElementById("enter-btn");
-const muteBtn = document.getElementById("mute-btn");
+// const muteBtn = document.getElementById("mute-btn");
 const vipGreeting = document.getElementById("vip-greeting");
 const nameInput = document.getElementById("guest-name");
 const rsvpForm = document.getElementById("rsvp-form");
@@ -93,17 +93,17 @@ async function initAudioAndVisuals() {
   }
 
   overlay.classList.add("fade-out");
-  muteBtn.classList.remove("hidden");
+  // muteBtn.classList.remove("hidden");
 
   requestAnimationFrame(renderLoop);
 }
 
 enterBtn.addEventListener("click", initAudioAndVisuals);
 
-muteBtn.addEventListener("click", () => {
-  audio.muted = !audio.muted;
-  muteBtn.textContent = audio.muted ? "🔇" : "🔊";
-});
+//muteBtn.addEventListener("click", () => {
+//  audio.muted = !audio.muted;
+//  muteBtn.textContent = audio.muted ? "🔇" : "🔊";
+//});
 
 function getAverageRange(arr, startIdx, endIdx) {
   let sum = 0;

@@ -1,6 +1,6 @@
 :root {
   --bg-color: #050508;
-  --card-bg: rgba(16, 16, 24, 0.78); /* Hieman läpikuultava (voit säätää 0.75–0.85 maun mukaan) */
+  --card-bg: rgba(16, 16, 24, 0.7); /* Hieman läpikuultava (voit säätää 0.75–0.85 maun mukaan) */
   --active-color: #00f0ff;
   --secondary-color: #ff007f;
 }
@@ -130,7 +130,7 @@ body {
 
 @media (max-width: 480px) {
   .stage-blinders { gap: 12px; }
-  .blinder-light { width: 24px; height: 24px; }
+  .blinder-light { width: 29px; height: 29px; } /* 20 % isompi (24px -> 29px) */
   .blinder-top { top: 14px; }
   .blinder-bottom { bottom: 14px; }
 }

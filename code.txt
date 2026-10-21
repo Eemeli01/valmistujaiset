@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kutsu: DI-Valmistujaiset | Eemeli Kokkonen</title>
+
+  <!-- OpenGraph / Sosiaalisen median esikatselu -->
+  <meta property="og:title" content="Kutsu: DI-Valmistujaiset | 9.1.2027">
+  <meta property="og:description" content="Otaniemi, Espoo • Avaa kutsu napauttamalla (äänet päälle 🔊)">
+  <meta property="og:image" content="assets/og-preview.jpg">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#050508">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ääniraita taustalla -->
+  <audio id="club-audio" src="assets/club-track.mp3" preload="auto" loop></audio>
+
+  <!-- Sisääntuloikkuna (Bouncer Pattern) -->
+  <div id="overlay">
+    <div class="overlay-content">
+      <p id="vip-greeting" class="vip-badge"></p>
+      <h1 class="overlay-title">KUTSU</h1>
+      <p class="overlay-sub">9. TAMMIKUUTA 2027 • OTANIEMI</p>
+      <button id="enter-btn" class="neon-btn pulse">ASTU SISÄÄN 🔊</button>
+    </div>
+  </div>
+
+<!-- Klubin valojärjestelmä (Huippunopea GPU Canvas) -->
+  <div id="disco-lights" aria-hidden="true">
+    <canvas id="light-canvas"></canvas>
+  </div>
+
+    <!-- 5 kpl tarkkarajaisia valkoisia hakuspotteja (rauhalliset kohdat) -->
+    <div class="searchlight-beam beam-1"></div>
+    <div class="searchlight-beam beam-2"></div>
+    <div class="searchlight-beam beam-3"></div>
+    <div class="searchlight-beam beam-4"></div>
+    <div class="searchlight-beam beam-5"></div>
+
+    <!-- 8 kpl toisistaan riippumattomasti pyyhkivää värillistä klubispottia -->
+    <div class="spotlight spot-tl"></div>
+    <div class="spotlight spot-tr"></div>
+    <div class="spotlight spot-bl"></div>
+    <div class="spotlight spot-br"></div>
+    <div class="spotlight spot-tc"></div>
+    <div class="spotlight spot-bc"></div>
+    <div class="spotlight spot-ml"></div>
+    <div class="spotlight spot-mr"></div>
+    
+    <!-- Ympäröivät ambient-pehmennykset -->
+    <div class="ambient-glow top-glow"></div>
+    <div class="ambient-glow bottom-glow"></div>
+  </div>
+
+  <!-- Ylä- ja alareunan horisontaaliset lavavalot (6 kpl kummassakin) -->
+  <div class="stage-blinders blinder-top" aria-hidden="true">
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+  </div>
+
+  <div class="stage-blinders blinder-bottom" aria-hidden="true">
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+    <div class="blinder-light"></div>
+  </div>
+
+  <!-- Pystysuuntaiset neonkyltit reunoilla -->
+  <div class="side-sign left-sign" aria-hidden="true">ALL OF THE LIGHTS</div>
+  <div class="side-sign right-sign" aria-hidden="true">ALL OF THE LIGHTS</div>
+
+  <!-- Kelluva äänenvoimakkuuden mykistyspainike -->
+  <button id="mute-btn" class="icon-btn hidden" aria-label="Mykistä äänet">🔊</button>
+
+<!-- Keskuskortti -->
+  <main class="invite-container">
+    <article class="invite-card" id="invite-card">
+      <!-- GPU-kiihdytetyt valomadot -->
+      <div class="worm-border" aria-hidden="true">
+        <div class="worm-spinner" id="worm-spinner"></div>
+      </div>
+
+      <header class="card-header">
+        <span class="badge">TERVETULOA</span>
+        <h1 class="party-title">VALMISTUJAISBILEISIIN</h1>
+        <p class="host-name">DI Eemeli Kokkonen</p>
+      </header>
+
+      <section class="event-details">
+        <div class="detail-row">
+          <span class="icon">📅</span>
+          <div>
+            <strong>Lauantai 9.1.2027</strong>
+            <p>Ovet klo 18:00 alkaen</p>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="icon">📍</span>
+          <div>
+            <strong>Otaniemi</strong>
+            <p>Otakaari 15, Espoo</p>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="icon">👔</span>
+          <div>
+            <strong>Pukukoodi</strong>
+            <p>Smart casual</p>
+          </div>
+        </div>
+        <div class="detail-row" id="deadline-row">
+          <span class="icon">⏰</span>
+          <div>
+            <strong>Ilmoittautuminen</strong>
+            <p>Pyydetään 31.12.2026 mennessä</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ilmoittautumislomake -->
+      <section class="rsvp-section" id="rsvp-container">
+        <form id="rsvp-form">
+          <div class="form-group">
+            <label for="guest-name">Nimesi</label>
+            <input type="text" id="guest-name" name="name" required placeholder="Etunimi Sukunimi">
+          </div>
+
+          <div class="form-group">
+            <label for="guest-avec">Avec</label>
+            <input type="text" id="guest-avec" name="avec" placeholder="Valinnainen">
+          </div>
+
+          <div class="form-group">
+            <label>Pääsetkö paikalle?</label>
+            <div class="radio-options">
+              <label class="radio-btn">
+                <input type="radio" name="attendance" value="attending" checked>
+                <span>Mukana! 🎉</span>
+              </label>
+              <label class="radio-btn">
+                <input type="radio" name="attendance" value="declined">
+                <span>En valitettavasti pääse</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="guest-message">Lisätietoja</label>
+            <textarea id="guest-message" name="message" rows="3" placeholder="Ruokavalio, biisitoiveet tai tervehdys..."></textarea>
+          </div>
+
+          <button type="submit" id="submit-btn" class="neon-btn full-width">LÄHETÄ VASTAUS</button>
+        </form>
+
+        <!-- Vahvistusviesti -->
+        <div id="rsvp-success" class="rsvp-success hidden">
+          <div class="check-icon">✨</div>
+          <h3>Olet listalla!</h3>
+          <p>Vastauksesi on tallennettu. Nähdään Otaniemessä 9. tammikuuta!</p>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
+========================================
+
+// Aseta tähän GitHubin Personal Access Token (PAT), jotta tiedosto voidaan tallentaa suoraan repoosi
+// const GITHUB_TOKEN = "";;
+const GITHUB_OWNER = "Eemeli01";
+const GITHUB_REPO = "valmistujaiset";
+const GITHUB_PATH = "responses.json";
+const RSVP_ENDPOINT = "https://formspree.io/f/xaeqgelv";
+
+let colorIdx = 0;
+let lastBeat = 0;
+let beamIntensity = 0.5;
+let wormAngle = 0;
+let timeScale = 0;
+
+let audioCtx = null;
+let analyser = null;
+let dataArray = null;
+
+const audio = document.getElementById("club-audio");
+const overlay = document.getElementById("overlay");
+const enterBtn = document.getElementById("enter-btn");
+const muteBtn = document.getElementById("mute-btn");
+const vipGreeting = document.getElementById("vip-greeting");
+const nameInput = document.getElementById("guest-name");
+const rsvpForm = document.getElementById("rsvp-form");
+const rsvpSuccess = document.getElementById("rsvp-success");
+const deadlineRow = document.getElementById("deadline-row");
+
+const inviteCard = document.getElementById("invite-card");
+const wormSpinner = document.getElementById("worm-spinner");
+const sideSigns = document.querySelectorAll(".side-sign");
+const topLights = document.querySelectorAll(".blinder-top .blinder-light");
+const bottomLights = document.querySelectorAll(".blinder-bottom .blinder-light");
+
+const canvas = document.getElementById("light-canvas");
+const ctx = canvas.getContext("2d", { alpha: false });
+let cw = 240;
+let ch = 420;
+
+function resizeCanvas() {
+  const aspect = window.innerWidth / window.innerHeight;
+  ch = 360;
+  cw = Math.round(ch * aspect);
+  canvas.width = cw;
+  canvas.height = ch;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// 1. VIP-nimen alustus
+window.addEventListener("DOMContentLoaded", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const guest = urlParams.get("guest");
+  if (guest) {
+    const cleanGuest = decodeURIComponent(guest).trim();
+    vipGreeting.textContent = `VIP-sisäänpääsy: ${cleanGuest}`;
+    if (nameInput) nameInput.value = cleanGuest;
+  }
+});
+
+// 2. Äänen ja Web Audio API:n alustus
+async function initAudioAndVisuals() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass({ latencyHint: "playback" });
+
+    const source = audioCtx.createMediaElementSource(audio);
+    analyser = audioCtx.createAnalyser();
+    
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.70;
+
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+  }
+
+  if (audioCtx.state === "suspended") {
+    await audioCtx.resume();
+  }
+
+  try {
+    await audio.play();
+  } catch (err) {
+    console.warn("Autoplay estetty:", err);
+  }
+
+  overlay.classList.add("fade-out");
+  muteBtn.classList.remove("hidden");
+
+  requestAnimationFrame(renderLoop);
+}
+
+enterBtn.addEventListener("click", initAudioAndVisuals);
+
+muteBtn.addEventListener("click", () => {
+  audio.muted = !audio.muted;
+  muteBtn.textContent = audio.muted ? "🔇" : "🔊";
+});
+
+function getAverageRange(arr, startIdx, endIdx) {
+  let sum = 0;
+  for (let i = startIdx; i <= endIdx; i++) {
+    sum += arr[i];
+  }
+  return sum / (endIdx - startIdx + 1);
+}
+
+// Kalenteritiedoston (.ics) luonti ja lataus
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "add-to-calendar") {
+    e.preventDefault();
+    const icsData = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      "SUMMARY:Eemelin valmistujaiset",
+      "LOCATION:Otakaari 15, Espoo",
+      "DESCRIPTION:Eemelin DI-valmistujaisbileet Otaniemessä.",
+      "DTSTART:20270109T180000",
+      "DTEND:20270110T000000",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "eemelin-valmistujaiset.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+});
+
+
+// Neon-klubipaletti
+const PALETTE = [
+  { p: "0, 240, 255", s: "255, 0, 127" },
+  { p: "112, 0, 255", s: "0, 255, 102" },
+  { p: "255, 0, 85",  s: "0, 240, 255" },
+  { p: "255, 230, 0", s: "112, 0, 255" },
+  { p: "0, 255, 204", s: "255, 51, 0" }
+];
+
+function drawBeam(x, y, angleDeg, spreadDeg, rgb, alpha, length) {
+  if (alpha <= 0.01) return;
+  const rad = (angleDeg * Math.PI) / 180;
+  const halfSpread = ((spreadDeg / 2) * Math.PI) / 180;
+
+  const grad = ctx.createRadialGradient(x, y, 2, x, y, length);
+  grad.addColorStop(0, `rgba(${rgb}, ${alpha})`);
+  grad.addColorStop(0.6, `rgba(${rgb}, ${alpha * 0.45})`);
+  grad.addColorStop(1, `rgba(${rgb}, 0)`);
+
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.arc(x, y, length, rad - halfSpread, rad + halfSpread);
+  ctx.closePath();
+  ctx.fill();
+}
+
+const lightIntervals = [
+  [4.6, 5.9],
+  [17.5, 18.8],
+  [30.1, 31.4],
+  [42.4, 43.7],
+  [55.2, 56.5],
+  [81.4, 82.7],
+  [107.2, 108.5],
+  [119.0, 120.3]
+];
+
+let prevIlluminated = false;
+let prevBlinderState = "";
+
+function renderLoop() {
+  analyser.getByteFrequencyData(dataArray);
+
+  const subBass = getAverageRange(dataArray, 1, 4) / 255;
+  const mids    = getAverageRange(dataArray, 5, 15) / 255;
+  const treble  = getAverageRange(dataArray, 20, 48) / 255;
+
+  const now = performance.now();
+  const currentTime = audio.currentTime;
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#050508";
+  ctx.fillRect(0, 0, cw, ch);
+
+  ctx.globalCompositeOperation = "lighter";
+
+  const isActualBreakdown = (currentTime < 2.0) || 
+                            (currentTime >= 16.5 && currentTime <= 17.5) || 
+                            (currentTime >= 57.0 && currentTime <= 68.5);
+  const totalVolume = subBass * 0.5 + mids * 0.3 + treble * 0.2;
+  const isQuietMoment = isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0);
+
+  const speedMultiplier = 1 + subBass * 1.8 + treble * 0.8;
+  timeScale += 0.012 * speedMultiplier;
+
+  const maxLen = Math.hypot(cw, ch) * 0.58;
+
+  if (!isQuietMoment) {
+    const beatEnergy = Math.max(subBass * 1.3, mids * 1.15, treble * 1.05);
+    if ((subBass > 0.68 || mids > 0.65) && now - lastBeat > 180) {
+      colorIdx = (colorIdx + 1) % PALETTE.length;
+      lastBeat = now;
+    }
+
+    if (beatEnergy > 0.70) {
+      beamIntensity = 0.85 + Math.random() * 0.15;
+    } else {
+      beamIntensity = Math.max(0.40, beamIntensity * 0.92);
+    }
+
+    let strobeGate = 1.0;
+    if (currentTime >= 73.5 && currentTime <= 81.4) {
+      const p = (currentTime - 73.5) / (81.4 - 73.5);
+      const cycleMs = 85 - p * 52;
+      strobeGate = (Math.floor(now / cycleMs) % 2 === 0) ? 1.0 : 0.0;
+    } else if (subBass > 0.84 && mids > 0.70) {
+      strobeGate = (Math.floor(now / 38) % 2 === 0) ? 1.0 : 0.15;
+    }
+
+    const subtleSparkle = treble > 0.50 ? (treble - 0.50) * 0.5 : 0.0;
+    const alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
+
+    const colP = PALETTE[colorIdx].p;
+    const colS = PALETTE[colorIdx].s;
+    const t = timeScale;
+
+    drawBeam(0, 0,       45 + Math.sin(t * 0.72) * 55 + Math.cos(t * 0.32) * 35, 42, colP, alpha, maxLen);
+    drawBeam(cw, 0,     135 + Math.cos(t * 0.65) * 55 - Math.sin(t * 0.28) * 35, 42, colS, alpha, maxLen);
+    drawBeam(0, ch,     -45 - Math.sin(t * 0.68) * 55 + Math.cos(t * 0.42) * 35, 44, colS, alpha, maxLen);
+    drawBeam(cw, ch,   -135 - Math.cos(t * 0.78) * 55 + Math.sin(t * 0.36) * 35, 44, colP, alpha, maxLen);
+
+    drawBeam(cw * 0.5, 0,  90 + Math.sin(t * 0.92 + 1.2) * 65, 36, colS, alpha * 0.8, maxLen);
+    drawBeam(cw * 0.5, ch, -90 - Math.cos(t * 0.85 + 0.8) * 65, 36, colP, alpha * 0.8, maxLen);
+    drawBeam(0, ch * 0.5,   0 + Math.cos(t * 0.68 + 2.1) * 60, 38, colP, alpha * 0.75, maxLen);
+    drawBeam(cw, ch * 0.5, 180 - Math.sin(t * 0.88 + 1.7) * 60, 38, colS, alpha * 0.75, maxLen);
+  } else {
+    const wT = now * 0.0006;
+    const whiteCol = "255, 255, 255";
+    drawBeam(0, 0,         45 + Math.sin(wT * 0.8) * 45, 18, whiteCol, 0.75, maxLen);
+    drawBeam(cw, ch,     -135 - Math.cos(wT * 0.7) * 45, 18, whiteCol, 0.70, maxLen);
+    drawBeam(cw * 0.8, 0,  95 + Math.sin(wT * 1.1 + 1.5) * 45, 20, whiteCol, 0.65, maxLen);
+    drawBeam(cw * 0.2, ch, -85 - Math.sin(wT * 0.9 + 2.0) * 45, 18, whiteCol, 0.70, maxLen);
+    drawBeam(cw * 0.4, 0,  85 + Math.cos(wT * 0.65) * 50, 22, whiteCol, 0.60, maxLen);
+  }
+
+  let isSingingLights = false;
+  let buildupActive = false;
+  let activeStep = -1;
+
+  for (const [start, end] of lightIntervals) {
+    const countdownStart = start - 2.5;
+    if (currentTime >= countdownStart && currentTime < start) {
+      buildupActive = true;
+      const elapsed = currentTime - countdownStart;
+      activeStep = Math.min(5, Math.floor(elapsed / 0.5));
+      break;
+    } else if (currentTime >= start && currentTime <= end) {
+      isSingingLights = true;
+      activeStep = 5;
+      break;
+    }
+  }
+
+  if (isSingingLights !== prevIlluminated) {
+    sideSigns.forEach(sign => sign.classList.toggle("illuminated", isSingingLights));
+    prevIlluminated = isSingingLights;
+  }
+
+  const isBassHit = !isQuietMoment && (subBass > 0.80);
+  const currentBlinderState = (buildupActive || isSingingLights) 
+    ? `step-${activeStep}` 
+    : (isBassHit ? "bass-on" : "off");
+
+  if (currentBlinderState !== prevBlinderState) {
+    if (buildupActive || isSingingLights) {
+      topLights.forEach((light, i) => {
+        light.classList.remove("solid-on");
+        light.classList.toggle("active", i <= activeStep);
+      });
+      bottomLights.forEach((light, i) => {
+        light.classList.remove("solid-on");
+        light.classList.toggle("active", (5 - i) <= activeStep);
+      });
+    } else {
+      topLights.forEach(light => {
+        light.classList.remove("active");
+        light.classList.toggle("solid-on", isBassHit);
+      });
+      bottomLights.forEach(light => {
+        light.classList.remove("active");
+        light.classList.toggle("solid-on", isBassHit);
+      });
+    }
+    prevBlinderState = currentBlinderState;
+  }
+
+  let wormDir = 1;
+  for (const [start] of lightIntervals) {
+    if (currentTime >= start) wormDir *= -1;
+  }
+
+  let wormSpeed = 0.25;
+  if (!isQuietMoment) {
+    const energy = subBass * 2.4 + mids * 1.5 + treble * 0.8;
+    wormSpeed = 0.55 + energy * 2.2;
+  }
+
+  wormAngle = (wormAngle + wormDir * wormSpeed + 360000) % 360;
+  wormSpinner.style.transform = `rotate(${wormAngle.toFixed(1)}deg)`;
+
+  const scaleValue = 1 + Math.pow(subBass, 1.4) * 0.08;
+  inviteCard.style.transform = `scale(${scaleValue.toFixed(3)})`;
+
+  requestAnimationFrame(renderLoop);
+}
+
+// 4. RSVP-lomakkeen käsittely
+rsvpForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const submitBtn = document.getElementById("submit-btn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "LÄHETETÄÄN...";
+
+  const formData = new FormData(rsvpForm);
+  const attendance = formData.get("attendance"); // "attending" tai "declined"
+  const payload = {
+    name: formData.get("name"),
+    avec: formData.get("avec") || "",
+    attendance: attendance,
+    message: formData.get("message") || "",
+    timestamp: new Date().toISOString()
+  };
+
+  // Jos Formspree ID on vielä asettamatta, näytetään onnistuminen suoraan viiveellä testinä
+  if (RSVP_ENDPOINT.includes("YOUR_FORM_ID")) {
+    setTimeout(() => {
+      showSuccess(attendance);
+    }, 500);
+    return;
+  }
+
+  try {
+    const res = await fetch(RSVP_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      showSuccess(attendance);
+    } else {
+      alert("Ilmoittautumisen lähetys epäonnistui. Yritä uudelleen!");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "LÄHETÄ VASTAUS";
+    }
+  } catch (err) {
+    // Jos yhteys tökkii, näytetään silti käyttäjälle onnistumisviesti, ettei nappi jää jumiin
+    showSuccess(attendance);
+  }
+});
+
+function showSuccess(attendance) {
+  rsvpForm.classList.add("hidden");
+  rsvpSuccess.classList.remove("hidden");
+
+  const successTitle = rsvpSuccess.querySelector("h3");
+  const successText = rsvpSuccess.querySelector("p");
+  const checkIcon = rsvpSuccess.querySelector(".check-icon");
+
+  if (attendance === "declined") {
+    checkIcon.textContent = "🤝";
+    successTitle.textContent = "Valinta tallennettu!";
+    successText.textContent = "Pysytään yhteyksissä!";
+    
+    const cardHeader = inviteCard.querySelector(".card-header");
+    const eventDetails = inviteCard.querySelector(".event-details");
+    if (cardHeader) cardHeader.style.display = "none";
+    if (eventDetails) eventDetails.style.display = "none";
+  } else {
+    checkIcon.textContent = "✨";
+    successTitle.textContent = "Olet listalla!";
+    successText.textContent = "Vastauksesi on tallennettu. Nähdään Otaniemessä 9. tammikuuta!";
+
+    if (deadlineRow) {
+      deadlineRow.innerHTML = `
+        <span class="icon">🗓️</span>
+        <div>
+          <strong>Kalenteri</strong>
+          <p><a href="#" id="add-to-calendar" style="color: var(--active-color); text-decoration: underline; cursor: pointer;">Lisää kalenteriin</a></p>
+        </div>
+      `;
+    }
+  }
+}
+
+====================================
+
+:root {
+  --bg-color: #050508;
+  --card-bg: #101018;
+  --active-color: #00f0ff;
+  --secondary-color: #ff007f;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: #f0f0f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Sisääntulokerros */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  transition: opacity 0.8s ease, visibility 0.8s;
+  padding: 20px;
+  text-align: center;
+}
+
+#overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.vip-badge {
+  color: #00ff66;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.overlay-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.overlay-sub {
+  color: #8c8c9e;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin-bottom: 28px;
+}
+
+/* --- CANVAS-VALOJÄRJESTELMÄ (PEHMEÄ SUMENNUS PALAUTETTU) --- */
+#disco-lights {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+#light-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* Tekee Canvas-keiloista pehmeitä ja aitoja klubivaloja ilman suunnikasreunoja */
+  filter: blur(22px);
+  transform: scale(1.08); /* Estää blur-reunojen tummumisen */
+}
+
+/* --- HORISONTAALISET LAVAVALOT (ALKUPERÄINEN NÄYTTÄVÄ ILME) --- */
+.stage-blinders {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 18px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.blinder-top { top: 18px; }
+.blinder-bottom { bottom: 18px; }
+
+.blinder-light {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0d0d14;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+  transition: background 0.04s ease, border-color 0.04s ease, box-shadow 0.04s ease, transform 0.04s ease;
+}
+
+.blinder-light.active {
+  background: radial-gradient(circle, #ffffff 30%, #ffd700 100%);
+  border-color: #ffffff;
+  box-shadow: 
+    0 0 16px #ffd700,
+    0 0 35px #ff9900;
+  transform: scale(1.15);
+}
+
+.blinder-light.solid-on {
+  background: #ffffff !important;
+  border-color: #ffd700 !important;
+  box-shadow: 
+    0 0 24px #ffffff,
+    0 0 50px #ffd700 !important;
+  transform: scale(1.2) !important;
+}
+
+@media (max-width: 480px) {
+  .stage-blinders { gap: 12px; }
+  .blinder-light { width: 24px; height: 24px; }
+  .blinder-top { top: 14px; }
+  .blinder-bottom { bottom: 14px; }
+}
+
+/* --- PYYSTYSUUNTAISET NEONKYLTIT (ALKUPERÄINEN FONTTI & HEHKU) --- */
+.side-sign {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Montserrat", sans-serif;
+  font-weight: 900;
+  font-size: clamp(0.85rem, 2.7vh, 1.45rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  white-space: nowrap;
+  z-index: 25;
+  pointer-events: none;
+  display: block !important;
+  visibility: visible !important;
+  
+  /* Alkuperäinen tumma ääriviivatyyli sammuksissa */
+  color: #0c0c12;
+  -webkit-text-stroke: 1.2px #1c1c28;
+  text-shadow: none;
+  opacity: 0.45;
+  transition: opacity 0.08s ease, color 0.08s ease, -webkit-text-stroke 0.08s ease, text-shadow 0.08s ease;
+}
+
+.left-sign {
+  left: 6px;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.right-sign {
+  right: 6px;
+}
+
+/* Alkuperäinen kirkas kultainen neonhehku sytytettynä */
+.side-sign.illuminated {
+  color: #fffde8;
+  -webkit-text-stroke: 1.8px #ffd700;
+  opacity: 1;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.95),
+    0 0 25px #ffd700,
+    0 0 50px #ffae00,
+    0 0 85px rgba(255, 174, 0, 0.85);
+}
+
+/* Kelluva mykistyspainike */
+.icon-btn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  z-index: 50;
+  font-size: 1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- KORTIN KOKO: 20 % KAPEAMPI JA 20 % LYHYEMPI --- */
+.invite-container {
+  width: calc(100% - 104px);
+  max-width: 268px; /* 20 % kapeampi (335px -> 268px) */
+  padding: 54px 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+
+.invite-card {
+  position: relative;
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 14px 14px; /* 20 % matalampi sisätila */
+  will-change: transform;
+  transform: translateZ(0);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85);
+  text-align: left;
+}
+
+.worm-border {
+  position: absolute;
+  inset: -5px;
+  border-radius: 23px;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.35);
+}
+
+.worm-border::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: var(--card-bg);
+  border-radius: 18px;
+}
+
+.worm-spinner {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    #00f0ff 10deg,
+    #ffffff 24deg,
+    #00f0ff 38deg,
+    transparent 52deg,
+    transparent 180deg,
+    #ff007f 190deg,
+    #ffffff 204deg,
+    #ff007f 218deg,
+    transparent 232deg
+  );
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Kortin sisällöt skaalattuna 20 % tiiviimmiksi */
+.card-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #00f0ff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+}
+
+.party-title {
+  font-size: 1.0rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  background: linear-gradient(135deg, #fff 40%, #00f0ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2px;
+}
+
+.host-name {
+  color: #a0a0b2;
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.event-details {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 11px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.detail-row .icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.detail-row strong {
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.detail-row p {
+  color: #888899;
+  font-size: 0.62rem;
+  line-height: 1.15;
+}
+
+.form-group {
+  margin-bottom: 7px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.64rem;
+  margin-bottom: 2px;
+  color: #aaa;
+  text-align: left;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 6px 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.70rem;
+  outline: none;
+}
+
+textarea {
+  height: 38px;
+  resize: none;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  border-color: #00f0ff;
+}
+
+.radio-options {
+  display: flex;
+  gap: 6px;
+}
+
+.radio-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.radio-btn input {
+  display: none;
+}
+
+.radio-btn:has(input:checked) {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: #00f0ff;
+  color: #fff;
+}
+
+.neon-btn {
+  background: linear-gradient(135deg, #00f0ff, #ff007f);
+  color: #050508;
+  border: none;
+  border-radius: 50px;
+  padding: 9px 16px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.pulse {
+  animation: neon-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes neon-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.rsvp-success {
+  text-align: center;
+  padding: 14px 0;
+}
+
+.rsvp-success .check-icon { font-size: 1.6rem; margin-bottom: 4px; }
+.rsvp-success h3 { font-size: 0.95rem; color: #00ff66; margin-bottom: 3px; }
+.rsvp-success p { color: #aaa; font-size: 0.68rem; }
