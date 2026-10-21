@@ -27,6 +27,7 @@ const rsvpSuccess = document.getElementById("rsvp-success");
 const deadlineRow = document.getElementById("deadline-row");
 
 const inviteCard = document.getElementById("invite-card");
+const wormBorder = document.querySelector(".worm-border");
 const wormSpinner = document.getElementById("worm-spinner");
 const sideSigns = document.querySelectorAll(".side-sign");
 const topLights = document.querySelectorAll(".blinder-top .blinder-light");
@@ -200,6 +201,7 @@ const lightIntervals = [
 
 let prevIlluminated = false;
 let prevBlinderState = "";
+let prevWhiteTheme = false;
 
 function renderLoop() {
   analyser.getByteFrequencyData(dataArray);
@@ -217,7 +219,8 @@ function renderLoop() {
 
   ctx.globalCompositeOperation = "lighter";
 
-  // Erikoisjaksot
+  // Kovakoodatut erikoisjaksot
+  const isWhiteClubFlash    = (currentTime >= 3.95 && currentTime <= 4.73);
   const isSteadyClubSection = (currentTime >= 31.4 && currentTime <= 42.4);
   const isWhiteOrbsSection  = (currentTime >= 43.7 && currentTime <= 55.2);
 
@@ -225,35 +228,103 @@ function renderLoop() {
                             (currentTime >= 16.5 && currentTime <= 17.5) || 
                             (currentTime >= 57.0 && currentTime <= 68.5);
   const totalVolume = subBass * 0.5 + mids * 0.3 + treble * 0.2;
-  const isQuietMoment = !isSteadyClubSection && (isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0));
+  const isQuietMoment = !isSteadyClubSection && !isWhiteClubFlash && (isActualBreakdown || (totalVolume < 0.16 && currentTime < 120.0));
+
+  // Valkoinen teema on päällä, kun pelkät valkoiset spottivalot tai valkoiset pallot ovat päällä
+  const isWhiteTheme = isQuietMoment || isWhiteOrbsSection;
+
+  // Vaihda valomadon väri valkoiseksi/neonväriseksi vain tilan muuttuessa (0% lisäkuorma)
+  if (isWhiteTheme !== prevWhiteTheme) {
+    if (isWhiteTheme) {
+      wormSpinner.style.background = `conic-gradient(
+        from 0deg at 50% 50%,
+        transparent 0deg,
+        rgba(255, 255, 255, 0.55) 10deg,
+        #ffffff 24deg,
+        rgba(255, 255, 255, 0.55) 38deg,
+        transparent 52deg,
+        transparent 180deg,
+        rgba(255, 255, 255, 0.55) 190deg,
+        #ffffff 204deg,
+        rgba(255, 255, 255, 0.55) 218deg,
+        transparent 232deg
+      )`;
+      if (wormBorder) wormBorder.style.boxShadow = "0 0 18px rgba(255, 255, 255, 0.35)";
+    } else {
+      wormSpinner.style.background = "";
+      if (wormBorder) wormBorder.style.boxShadow = "";
+      if (badgeEl) badgeEl.style.backgroundImage = "none";
+    }
+    prevWhiteTheme = isWhiteTheme;
+  }
 
   const speedMultiplier = 1 + subBass * 1.8 + treble * 0.8;
   timeScale += 0.012 * speedMultiplier;
 
-  // --- PEHMEÄ, MUSIIKIN MUKAAN SOLJUVA VÄRILIUKU TEKSTEILLE JA NAPILLE ---
-  const musicColorDrive = subBass * 2.2 + mids * 1.6 + treble * 0.8;
-  textHue = (textHue + 0.35 + musicColorDrive * 2.4) % 360;
-  const h1 = textHue.toFixed(1);
-  const h2 = ((textHue + 75) % 360).toFixed(1);
-  const glowAlpha = (0.35 + subBass * 0.45).toFixed(2);
+  // Eksponentiaalinen intensiteetti: rauhallisissa kohdissa pieni, kovissa dropeissa huippukorkea
+  const rawEnergy = Math.min(1, subBass * 0.52 + mids * 0.33 + treble * 0.15);
+  const highIntensity = Math.pow(rawEnergy, 2.6);
 
-  if (badgeEl) {
-    badgeEl.style.color = `hsl(${h1}, 100%, 62%)`;
-    badgeEl.style.backgroundColor = `hsla(${h1}, 100%, 50%, 0.16)`;
-    badgeEl.style.textShadow = `0 0 8px hsla(${h1}, 100%, 60%, ${glowAlpha})`;
-  }
-  if (partyTitleEl) {
-    partyTitleEl.style.backgroundImage = `linear-gradient(135deg, #ffffff 22%, hsl(${h1}, 100%, 62%) 62%, hsl(${h2}, 100%, 60%) 100%)`;
-  }
-  if (submitBtnEl) {
-    submitBtnEl.style.backgroundImage = `linear-gradient(135deg, hsl(${h1}, 100%, 55%), hsl(${h2}, 100%, 55%))`;
-    submitBtnEl.style.boxShadow = `0 0 14px hsla(${h1}, 100%, 55%, ${glowAlpha})`;
+  // --- TEKSTIEN JA PAINIKKEEN VÄRI / VALKOINEN KIMMELLYS ---
+  if (isWhiteTheme) {
+    // Rauhallinen valkoinen kimmellys spottivalojen aikana
+    const sPos = (50 + Math.sin(now * 0.0024) * 42).toFixed(1);
+    const sLow = Math.max(0, Number(sPos) - 26).toFixed(1);
+    const sHigh = Math.min(100, Number(sPos) + 26).toFixed(1);
+
+    const bPos = (50 - Math.sin(now * 0.0024) * 42).toFixed(1);
+    const bLow = Math.max(0, Number(bPos) - 28).toFixed(1);
+    const bHigh = Math.min(100, Number(bPos) + 28).toFixed(1);
+
+    const wGlow = (0.28 + 0.22 * Math.sin(now * 0.003)).toFixed(2);
+
+    if (badgeEl) {
+      badgeEl.style.color = "#ffffff";
+      badgeEl.style.backgroundColor = "rgba(255, 255, 255, 0.10)";
+      badgeEl.style.backgroundImage = `linear-gradient(105deg, rgba(255,255,255,0.03) ${sLow}%, rgba(255,255,255,0.32) ${sPos}%, rgba(255,255,255,0.03) ${sHigh}%)`;
+      badgeEl.style.textShadow = `0 0 8px rgba(255, 255, 255, ${wGlow})`;
+    }
+    if (partyTitleEl) {
+      partyTitleEl.style.backgroundImage = `linear-gradient(105deg, #98a2b3 0%, #aab4c6 ${sLow}%, #ffffff ${sPos}%, #aab4c6 ${sHigh}%, #98a2b3 100%)`;
+    }
+    if (submitBtnEl) {
+      submitBtnEl.style.backgroundImage = `linear-gradient(105deg, #b4bccb 0%, #cfd6e6 ${bLow}%, #ffffff ${bPos}%, #cfd6e6 ${bHigh}%, #b4bccb 100%)`;
+      submitBtnEl.style.boxShadow = `0 0 14px rgba(255, 255, 255, ${wGlow})`;
+    }
+  } else {
+    // Kovakoodatussa 31.4-42.4s kohdassa hidas liuku, intensiivisissä kohdissa nopea
+    let hueStep;
+    if (isSteadyClubSection) {
+      hueStep = 0.16 + rawEnergy * 0.25;
+    } else {
+      hueStep = 0.22 + highIntensity * 8.5;
+    }
+
+    textHue = (textHue + hueStep) % 360;
+    const h1 = textHue.toFixed(1);
+    const h2 = ((textHue + 70) % 360).toFixed(1);
+    const h3 = ((textHue + 140) % 360).toFixed(1);
+    const glowAlpha = (0.35 + subBass * 0.45).toFixed(2);
+
+    if (badgeEl) {
+      badgeEl.style.color = `hsl(${h1}, 100%, 62%)`;
+      badgeEl.style.backgroundColor = `hsla(${h1}, 100%, 50%, 0.16)`;
+      badgeEl.style.textShadow = `0 0 8px hsla(${h1}, 100%, 60%, ${glowAlpha})`;
+    }
+    if (partyTitleEl) {
+      // Koko teksti (myös alkuosan VALM) vaihtaa väriä 0% -> 50% -> 100%
+      partyTitleEl.style.backgroundImage = `linear-gradient(90deg, hsl(${h1}, 100%, 64%) 0%, hsl(${h2}, 100%, 66%) 50%, hsl(${h3}, 100%, 64%) 100%)`;
+    }
+    if (submitBtnEl) {
+      submitBtnEl.style.backgroundImage = `linear-gradient(135deg, hsl(${h1}, 100%, 55%), hsl(${h2}, 100%, 55%))`;
+      submitBtnEl.style.boxShadow = `0 0 14px hsla(${h1}, 100%, 55%, ${glowAlpha})`;
+    }
   }
 
   const maxLen = Math.hypot(cw, ch) * 0.58;
 
   if (isWhiteOrbsSection) {
-    // 43.7 - 55.2 s: Kaikki nykyiset valot pois -> rauhalliset valkoiset hohtavat soikiot ja pallot
+    // 43.7 - 55.2 s: Rauhalliset valkoiset hohtavat soikiot ja pallot
     const oT = now * 0.00075;
     drawWhiteOrb(cw * (0.24 + 0.18 * Math.sin(oT * 1.1)), ch * (0.22 + 0.14 * Math.cos(oT * 0.9)), 46, 22, oT * 0.6, 0.95);
     drawWhiteOrb(cw * (0.76 + 0.16 * Math.cos(oT * 0.85)), ch * (0.28 + 0.15 * Math.sin(oT * 1.05)), 30, 30, 0, 0.90);
@@ -295,8 +366,13 @@ function renderLoop() {
       alpha = Math.min(1, (beamIntensity + subtleSparkle) * strobeGate * 0.85);
     }
 
-    const colP = PALETTE[colorIdx].p;
-    const colS = PALETTE[colorIdx].s;
+    // 3.95 - 4.73 s: Kaikki klubivalot ovat valkoisia
+    const colP = isWhiteClubFlash ? "255, 255, 255" : PALETTE[colorIdx].p;
+    const colS = isWhiteClubFlash ? "255, 255, 255" : PALETTE[colorIdx].s;
+    if (isWhiteClubFlash) {
+      alpha = Math.max(alpha, 0.85);
+    }
+
     const t = timeScale;
 
     drawBeam(0, 0,       45 + Math.sin(t * 0.72) * 55 + Math.cos(t * 0.32) * 35, 42, colP, alpha, maxLen);
@@ -341,7 +417,6 @@ function renderLoop() {
     prevIlluminated = isSingingLights;
   }
 
-  // Lavavalot pidetään myös poissa 43.7 - 55.2 s erikoisjakson ajan
   const isBassHit = !isQuietMoment && !isSteadyClubSection && !isWhiteOrbsSection && (subBass > 0.80);
   const currentBlinderState = isWhiteOrbsSection
     ? "off"
@@ -375,10 +450,14 @@ function renderLoop() {
     if (currentTime >= start) wormDir *= -1;
   }
 
-  let wormSpeed = 0.25;
-  if (!isQuietMoment && !isWhiteOrbsSection) {
-    const energy = subBass * 2.4 + mids * 1.5 + treble * 0.8;
-    wormSpeed = 0.55 + energy * 2.2;
+  // Valomadon nopeus: rauhallisissa ja kovakoodatuissa kohdissa hidas, kovissa kohdissa hurjan nopea
+  let wormSpeed;
+  if (isQuietMoment || isWhiteOrbsSection) {
+    wormSpeed = 0.20 + rawEnergy * 0.20;
+  } else if (isSteadyClubSection) {
+    wormSpeed = 0.32 + rawEnergy * 0.45;
+  } else {
+    wormSpeed = 0.35 + highIntensity * 13.5;
   }
 
   wormAngle = (wormAngle + wormDir * wormSpeed + 360000) % 360;
